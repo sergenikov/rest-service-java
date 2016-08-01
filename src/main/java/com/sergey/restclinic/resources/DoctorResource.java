@@ -11,6 +11,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 
 @Path("/doctors")
 public class DoctorResource {
@@ -28,13 +29,15 @@ public class DoctorResource {
         iterable.forEach(new Block<Document>() {
             @Override
             public void apply(final Document document) {
-                System.out.println(document);
-                //doctors.add(new Doctor(document.getString("name"), document.getString("_id")));
-                
+//                System.out.println(document);
+                String name = document.getString("name");
+                String id = document.get("_id").toString();
+                Doctor d = new Doctor(name, id);
+                doctors.add(d);  
             }
         });
-        doctors.add(new Doctor("sergey", "16253461523"));
-        doctors.add(new Doctor("max", "1398472983475"));
+//        doctors.add(new Doctor("tomas", "16253461523"));
+//        doctors.add(new Doctor("max", "1398472983475"));
         return doctors;
     }
     

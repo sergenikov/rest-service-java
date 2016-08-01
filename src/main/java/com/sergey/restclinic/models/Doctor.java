@@ -5,8 +5,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class Doctor {
     
-    String name;
     String _id;
+    String name;
+    String phone;
     
     // no-op constructor for safety
     public Doctor() {}

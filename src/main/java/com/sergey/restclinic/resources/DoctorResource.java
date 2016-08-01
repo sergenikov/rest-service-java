@@ -12,6 +12,7 @@ import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -44,14 +45,13 @@ public class DoctorResource {
     @GET
     @Path("getdoctorbyname")
     @Produces(MediaType.APPLICATION_XML)
-    public List<Doctor> getDoctorByName() {
+    public List<Doctor> getDoctorByName2(@QueryParam("name") String name) {
+        
         final List<Doctor> doctors = new ArrayList<Doctor>();
         
         DatabaseConnection db = DatabaseConnection.getInstance();
         MongoCollection<Document> docCollection = db.mongodb.getCollection("Doctor");
         
-        
-        String name = "alex";
         BasicDBObject searchQuery = new BasicDBObject();
         searchQuery.put("name", name);
         FindIterable<Document> iterable = docCollection.find(searchQuery);
@@ -69,6 +69,7 @@ public class DoctorResource {
         return doctors;
     }
     
+    // A test call to see if api is working
     @GET
     @Path("getphil")
     @Produces(MediaType.APPLICATION_XML)
@@ -77,6 +78,7 @@ public class DoctorResource {
         return d;
     }
     
+    // A test call to see if api is working and db link is good
     @GET
     @Path("getdoctorsplain")
     @Produces(MediaType.TEXT_PLAIN)

@@ -19,7 +19,7 @@ import static java.util.Arrays.asList;
 /**
  * Root resource (exposed at "myresource" path)
  */
-@Path("myresource")
+@Path("patient")
 public class MyResource {
 
     MongoClient mongoClient = new MongoClient();
@@ -39,10 +39,9 @@ public class MyResource {
     }
     
     @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    @Path("/get-patient")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/get")
     public String getPatient() {
-        System.out.println(">>>>>> hello world");
         final ArrayList<String> rows = new ArrayList<String>();
         FindIterable<Document> iterable = db.getCollection("Patient").find();
         iterable.forEach(new Block<Document>() {

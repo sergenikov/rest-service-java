@@ -1,7 +1,10 @@
 package com.sergey.restclinic.resources;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.Block;
+import com.mongodb.DBCursor;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
 import com.sergey.restclinic.database.DatabaseConnection;
 import com.sergey.restclinic.models.Doctor;
 import java.util.ArrayList;
@@ -29,15 +32,40 @@ public class DoctorResource {
         iterable.forEach(new Block<Document>() {
             @Override
             public void apply(final Document document) {
-//                System.out.println(document);
                 String name = document.getString("name");
                 String id = document.get("_id").toString();
                 Doctor d = new Doctor(name, id);
-                doctors.add(d);  
+                doctors.add(d);
             }
         });
-//        doctors.add(new Doctor("tomas", "16253461523"));
-//        doctors.add(new Doctor("max", "1398472983475"));
+        return doctors;
+    }
+    
+    @GET
+    @Path("getdoctorbyname")
+    @Produces(MediaType.APPLICATION_XML)
+    public List<Doctor> getDoctorByName() {
+        final List<Doctor> doctors = new ArrayList<Doctor>();
+        
+        DatabaseConnection db = DatabaseConnection.getInstance();
+        MongoCollection<Document> docCollection = db.mongodb.getCollection("Doctor");
+        
+        
+        String name = "alex";
+        BasicDBObject searchQuery = new BasicDBObject();
+        searchQuery.put("name", name);
+        FindIterable<Document> iterable = docCollection.find(searchQuery);
+        
+        iterable.forEach(new Block<Document>() {
+            @Override
+            public void apply(final Document document) {
+                String name = document.getString("name");
+                String id = document.get("_id").toString();
+                Doctor d = new Doctor(name, id);
+                doctors.add(d);
+            }
+        });
+
         return doctors;
     }
     

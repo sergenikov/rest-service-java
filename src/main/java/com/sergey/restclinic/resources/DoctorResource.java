@@ -2,10 +2,8 @@ package com.sergey.restclinic.resources;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.Block;
-import com.mongodb.DBCursor;
 import com.mongodb.MongoException;
 import com.mongodb.MongoWriteConcernException;
-import com.mongodb.MongoWriteException;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.sergey.restclinic.database.DatabaseConnection;
@@ -13,10 +11,12 @@ import com.sergey.restclinic.models.Doctor;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -95,18 +95,46 @@ public class DoctorResource {
         try {
             docCollection.insertOne(newDoc);
         } catch (MongoWriteConcernException e) {
-            Response.status(500)
+            System.err.println(e);
+            return Response.status(500)
                     .entity("Adding doctor failed; name=" + name + "; error " + e)
                     .build();
-            System.err.println(e);
         } catch (MongoException e) {
-            Response.status(500)
+            System.err.println(e);
+            return Response.status(500)
                     .entity("Adding doctor failed; name=" + name + "; error " + e)
                     .build();
-            System.err.println(e);
         }
         
         return Response.status(200).entity("Success. Added doctor " + name).build();
+    }
+    
+    @DELETE
+    @Path("remove/{name}")
+    public Response removeDoctor(@PathParam("name") String name) {
+        DatabaseConnection db = DatabaseConnection.getInstance();
+        MongoCollection<Document> docCollection = db.mongodb.getCollection("Doctor");
+        
+        System.out.println("DoctorResource.removeDoctor(): removing doctor " + name);
+        
+        BasicDBObject searchQuery = new BasicDBObject();
+        searchQuery.put("name", name);
+        
+        try {
+            docCollection.deleteOne(searchQuery);
+        } catch (MongoWriteConcernException e) {
+            System.err.println(e);
+            return Response.status(500)
+                    .entity("Removing doctor failed; name=" + name + "; error " + e)
+                    .build();
+        } catch (MongoException e) {
+            System.err.println(e);
+            return Response.status(500)
+                    .entity("Removing doctor failed; name=" + name + "; error " + e)
+                    .build();
+        }
+        
+        return Response.status(200).entity("Success. Removed doctor " + name).build();
     }
 
     // A test call to see if api is working

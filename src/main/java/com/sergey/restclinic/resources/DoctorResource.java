@@ -83,30 +83,31 @@ public class DoctorResource {
      */
     @POST
     @Path("add")
-    public Response addDoctor(String name) {
+    @Consumes(MediaType.APPLICATION_XML)
+    public Response addDoctor(Doctor doctor) {
         DatabaseConnection db = DatabaseConnection.getInstance();
         MongoCollection<Document> docCollection = db.mongodb.getCollection("Doctor");
         
         // TODO when done validate fields/params received
         
-        System.out.println("DoctorResource.addDoctor() adding doctor " + name);
+        System.out.println("DoctorResource.addDoctor() adding doctor " + doctor.getName());
         Document newDoc = new Document();
-        newDoc.append("name", name);
+        newDoc.append("name", doctor.getName());
         try {
             docCollection.insertOne(newDoc);
         } catch (MongoWriteConcernException e) {
             System.err.println(e);
             return Response.status(500)
-                    .entity("Adding doctor failed; name=" + name + "; error " + e)
+                    .entity("Adding doctor failed; name=" + doctor.getName() + "; error " + e)
                     .build();
         } catch (MongoException e) {
             System.err.println(e);
             return Response.status(500)
-                    .entity("Adding doctor failed; name=" + name + "; error " + e)
+                    .entity("Adding doctor failed; name=" + doctor.getName() + "; error " + e)
                     .build();
         }
         
-        return Response.status(200).entity("Success. Added doctor " + name).build();
+        return Response.status(200).entity("Success. Added doctor " + doctor.getName()).build();
     }
     
     @DELETE
@@ -133,7 +134,8 @@ public class DoctorResource {
                     .entity("Removing doctor failed; name=" + name + "; error " + e)
                     .build();
         }
-        
+        // TODO failes to say that it did not remove duplicate records
+        // Add check for duplicates on POST
         return Response.status(200).entity("Success. Removed doctor " + name).build();
     }
 

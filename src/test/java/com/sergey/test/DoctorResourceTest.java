@@ -86,8 +86,7 @@ public class DoctorResourceTest extends JerseyTest {
     }
     
     @Test
-    public void testGetDoctorByNameDoesNotExist()
-            throws SAXException, ParserConfigurationException, IOException {
+    public void testGetDoctorByNameDoesNotExist() {
         GenericType<List<Doctor>> doctors = new GenericType<List<Doctor>>(){};
         List<Doctor> responseDoctors = target("doctors/getbyname")
                 .queryParam("name", DOESNOTEXIST)
@@ -96,24 +95,7 @@ public class DoctorResourceTest extends JerseyTest {
         assertEquals(responseDoctors.size(), 0);
     }
     
-    /**
-     * Get size of doctors list
-     * NOT USED - hopefully won't used.
-     * @param allDoctorsXML
-     * @return
-     * @throws SAXException
-     * @throws ParserConfigurationException
-     * @throws IOException 
-     */
-    private int getListSize(String allDoctorsXML) 
-            throws SAXException, ParserConfigurationException, IOException {
-        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-        org.w3c.dom.Document doc = dBuilder.parse(allDoctorsXML);
-        doc.getDocumentElement().normalize();
+    public void testAddDoctor() {
         
-        NodeList docList = doc.getElementsByTagName("doctors");
-        
-        return docList.getLength();
     }
 }

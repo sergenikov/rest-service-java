@@ -2,12 +2,12 @@
 Learning building REST services using Java, Jersey and MongoDB. 
 
 ## Description
-Returns XML output for GET commands and XML for POST commands. Currently not implementing all CRUD for all documents in the db.
+Returns XML output for GET commands and XML for POST commands. Currently not implementing entire CRUD for all documents in the db.
 
 ### Lacking
-Updating of Appointments
-Removing of Appointments
-Updating of Doctors and Patients
+1. Updating of Appointments
+2. Removing of Appointments
+3. Updating of Doctors and Patients
 
 
 
@@ -52,12 +52,12 @@ Updating of Doctors and Patients
 ## /restclinic/webapi/appointments
 
 ###Get
-/restclinic/webapi/appointment/get?doc_name=david&pat_name=chris&date=2016-05-12T23:00:00Z
+`/restclinic/webapi/appointment/get?doc_name=david&pat_name=chris&date=2016-05-12T23:00:00Z`
 
 Will get list of appointments for `Doctor=david, Patient=chris, Date=2016-05-12T23:00:00Z`.
 
 ###Post
-Will add new appointment to the database.
+Will add new appointment to the database. Add the following XML to request.
 ```
 <appointment>
 	<doctor>

@@ -13,9 +13,11 @@ XML Output
 ###Post
 /add			adds a new doctor
 
-`<doctor>
+```
+<doctor>
     <name>Gregory House</name>
-</doctor>`
+</doctor>
+```
 
 ###Delete
 /delete
@@ -35,7 +37,7 @@ Will get list of appointments for `Doctor=david, Patient=chris, Date=2016-05-12T
 
 ###Post
 Will add new appointment to the database.
-`
+```
 <appointment>
 	<doctor>
 		<name>david</name>
@@ -46,4 +48,4 @@ Will add new appointment to the database.
 	<date>2016-05-12T23:00:00Z</date>
 	<duration>1600</duration>
 </appointment>
-`
+```

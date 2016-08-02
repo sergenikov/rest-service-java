@@ -2,16 +2,23 @@
 Learning building REST services using Java, Jersey and MongoDB. 
 
 ## Description
-XML Output
+Returns XML output for GET commands and XML for POST commands. Currently not implementing all CRUD for all documents in the db.
+
+### Lacking
+Updating of Appointments
+Removing of Appointments
+Updating of Doctors and Patients
+
+
 
 ## /restclinic/webapi/doctors
 
 ###Get
-/getall			gets all doctors
-/getbyname?name=tom	gets single doctor by name
+`/getall`		gets all doctors
+`/getbyname?name=tom`	gets single doctor by name
 
 ###Post
-/add			adds a new doctor
+`/add`			adds a new doctor
 
 ```
 <doctor>
@@ -20,13 +27,27 @@ XML Output
 ```
 
 ###Delete
-/delete
-<doctor>
-	<name>Gregory House</name>
-</doctor>
+`/remove/{doctor name}`
+
+
 
 ## /restclinic/webapi/patients
-Same commands as doctor
+###Get
+`/getall`		        gets all patients 
+`/getbyname?name=tom`	gets single patient by name
+
+###Post
+`/add`			        adds a new patient
+```
+<patient>
+    <name>John Doe</name>
+</patient>
+```
+
+###Delete
+`/remove/{patient name}`
+
+
 
 ## /restclinic/webapi/appointments
 

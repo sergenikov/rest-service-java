@@ -10,9 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import org.bson.Document;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -95,7 +97,40 @@ public class DoctorResourceTest extends JerseyTest {
         assertEquals(responseDoctors.size(), 0);
     }
     
+    @Test
     public void testAddDoctor() {
+        Doctor testDoc1 = new Doctor();
+        testDoc1.setName("newDoc1");
+        Entity<Doctor> docEntity = Entity.entity(testDoc1, MediaType.APPLICATION_XML);
+        target("doctors/add").request().post(docEntity);
         
+        // do get to check
+        GenericType<List<Doctor>> doctors = new GenericType<List<Doctor>>(){};
+        List<Doctor> responseDoctors = target("doctors/getbyname")
+                .queryParam("name", "newDoc1")
+                .request(MediaType.APPLICATION_XML)
+                .get(doctors);
+        assertEquals("newDoc1", responseDoctors.get(0).getName());
     }
+    
+    /*
+    Test turned off: reading of response is not working this way. But this
+    is a potentially better way of doing it so keeping for now if I can fix it.
+    */
+    public void testAddDoctorOld() {
+        Doctor testDoc1 = new Doctor();
+        testDoc1.setName("newDoc1");
+        Entity<Doctor> docEntity = Entity.entity(testDoc1, MediaType.APPLICATION_XML);
+        target("doctors/add").request().post(docEntity);
+        
+        GenericType<List<Doctor>> doctors = new GenericType<List<Doctor>>(){};
+        Response response = target("doctors/getbyname")
+                .queryParam("name", "newDoc1")
+                .request(MediaType.APPLICATION_XML)
+                .get();
+        Doctor de = (Doctor) response.getEntity();
+        assertEquals("newDoc1", de.getName());
+    }
+    
+
 }

@@ -52,7 +52,7 @@ public class DoctorResource {
     @GET
     @Path("getbyname")
     @Produces(MediaType.APPLICATION_XML)
-    public List<Doctor> getDoctorByName2(@QueryParam("name") String name) {
+    public List<Doctor> getDoctorByName(@QueryParam("name") String name) {
         
         final List<Doctor> doctors = new ArrayList<>();
         

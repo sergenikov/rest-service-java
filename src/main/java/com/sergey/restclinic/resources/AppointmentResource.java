@@ -19,6 +19,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.Consumes;
@@ -26,6 +28,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import org.bson.Document;
 import javax.ws.rs.core.Response;
@@ -33,20 +36,90 @@ import javax.ws.rs.core.Response;
 @Path("/appointment") 
 public class AppointmentResource {
     
-    final String COLLECTION_NAME = "Appointment";
-    final String DATE_FORMAT = "yyyy-MM-dd HH:mm";
+    final String CURRENT_COLLECTION = "Appointment";
+    final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
     
+    /**
+     * Return all appointments that match all of these requirements
+     * @param param_doc_name doctor name
+     * @param param_pat_name patient name
+     * @param param_date     date and time in local time
+     * @return 
+     */
+    @GET
+    @Path("get")
+    @Produces(MediaType.APPLICATION_XML)
+    public List<Appointment> getAppointment(
+            @QueryParam("doc_name") String param_doc_name,
+            @QueryParam("pat_name") String param_pat_name,
+            @QueryParam("date") String param_date) {
+        
+        DatabaseConnection db = DatabaseConnection.getInstance();
+        MongoCollection<Document> docCollection = db.mongodb.getCollection(CURRENT_COLLECTION);
+        
+        // lookup in db for ids
+        Doctor d = lookupDoctor(param_doc_name);
+        Patient p = lookupPatient(param_pat_name);
+        
+        if (d == null) {
+            documentNotFoundError(d.getName());
+        } else if (p == null) {
+            documentNotFoundError(p.getName());
+        }
+        
+        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
+        // get date from request
+        Date date = null;
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        try {
+            date = format.parse("2016-05-12T23:00:00Z");
+        } catch (ParseException ex) {
+            // TODO needs some error handling for server not to freak out
+            Logger.getLogger(AppointmentResource.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("in date error");
+            return null;
+        }
+        
+        BasicDBObject searchQuery = new BasicDBObject();
+        searchQuery.put("doc_id", d.getId());
+        searchQuery.put("pat_id", p.getId());
+        searchQuery.put("datetime", date);
+        FindIterable<Document> iterable = docCollection.find(searchQuery);
+        
+        Appointment appointment = null;
+        
+        if (iterable.first() == null) {
+            return null;
+        }
+        
+        List<Appointment> appts = new ArrayList<>();
+        
+        // By the time exe gets here we 
+        // (1) found both patient and doctor
+        // (2) know we found appointment - date OK as well
+        for (Document document : iterable) {
+            appointment = new Appointment(
+                    d,
+                    p,
+                    param_date,
+                    document.getLong("duration")
+            );
+            appts.add(appointment);
+        }
+        
+        System.out.println("before returning");
+        return appts;
+    }
     
     @POST
     @Path("add")
     @Consumes(MediaType.APPLICATION_XML)
     public Response createAppointment(Appointment apt) {
         DatabaseConnection db = DatabaseConnection.getInstance();
-        MongoCollection<Document> docCollection = db.mongodb.getCollection(COLLECTION_NAME);
+        MongoCollection<Document> docCollection = db.mongodb.getCollection(CURRENT_COLLECTION);
         
         // Get dates
-        String sampleDate = "2016-09-05 12:30";
-        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
+        DateFormat format = new SimpleDateFormat(DATE_FORMAT, Locale.ENGLISH);
 
         
         System.out.println("AppointmentResource.createAppointment(): " 
@@ -85,6 +158,7 @@ public class AppointmentResource {
         
         // get date from request
         Date date = null;
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         try {
             date = format.parse(apt.getDate());
         } catch (ParseException ex) {
@@ -182,6 +256,19 @@ public class AppointmentResource {
         }
 
         return p;
+    }
+    
+    /**
+     * Create generic Response for when document is not found in the db.
+     * @param docName
+     * @return 
+     */
+    public Response documentNotFoundError(String docName) {
+        // Error if can't find either patient or doctor
+        return Response.status(400)
+                .entity("Appointment creating failed. Can't find patient " 
+                        + docName)
+                .build();
     }
 }
 

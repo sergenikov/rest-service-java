@@ -24,6 +24,7 @@ import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -62,17 +63,17 @@ public class AppointmentResource {
         Patient p = lookupPatient(param_pat_name);
         
         if (d == null) {
-            documentNotFoundError(d.getName());
+            documentNotFoundError(param_doc_name);
         } else if (p == null) {
-            documentNotFoundError(p.getName());
+            documentNotFoundError(param_pat_name);
         }
         
         DateFormat format = new SimpleDateFormat(DATE_FORMAT);
         // get date from request
-        Date date = null;
+        Date date;
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         try {
-            date = format.parse("2016-05-12T23:00:00Z");
+            date = format.parse(param_date);
         } catch (ParseException ex) {
             // TODO needs some error handling for server not to freak out
             Logger.getLogger(AppointmentResource.class.getName()).log(Level.SEVERE, null, ex);
@@ -193,6 +194,69 @@ public class AppointmentResource {
                 + newDoc.toString());
         
         return Response.status(200).entity("Success. Added appointment.").build();
+    }
+    
+    /**
+     * Return all appointments that match all of these requirements
+     * @param param_doc_name doctor name
+     * @param param_pat_name patient name
+     * @param param_date     date and time in local time
+     * @return 
+     */
+    @DELETE
+    @Path("remove")
+    //@Produces(MediaType.APPLICATION_XML)
+    public Response deleteAppointment(
+            @QueryParam("doc_name") String param_doc_name,
+            @QueryParam("pat_name") String param_pat_name,
+            @QueryParam("date") String param_date) {
+        
+        DatabaseConnection db = DatabaseConnection.getInstance();
+        MongoCollection<Document> docCollection = db.mongodb.getCollection(CURRENT_COLLECTION);
+        
+        // lookup in db for ids
+        Doctor d = lookupDoctor(param_doc_name);
+        Patient p = lookupPatient(param_pat_name);
+        
+        if (d == null) {
+            documentNotFoundError(param_doc_name);
+        } else if (p == null) {
+            documentNotFoundError(param_pat_name);
+        }
+        
+        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
+        // get date from request
+        Date date = null;
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        try {
+            date = format.parse(param_date);
+        } catch (ParseException ex) {
+            // TODO needs some error handling for server not to freak out
+            Logger.getLogger(AppointmentResource.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("in date error");
+            return null;
+        }
+        
+        BasicDBObject searchQuery = new BasicDBObject();
+        searchQuery.put("doc_id", d.getId());
+        searchQuery.put("pat_id", p.getId());
+        searchQuery.put("datetime", date);
+        
+        try {
+            docCollection.deleteOne(searchQuery);
+        } catch (MongoWriteConcernException e) {
+            System.err.println(e);
+            return Response.status(400)
+                    .entity("Removing appointment failed; error " + e)
+                    .build();
+        } catch (MongoException e) {
+            System.err.println(e);
+            return Response.status(400)
+                    .entity("Removing appointment failed; error " + e)
+                    .build();
+        }
+        
+        return Response.status(200).entity("Success. Removed appointment").build();
     }
     
     /**

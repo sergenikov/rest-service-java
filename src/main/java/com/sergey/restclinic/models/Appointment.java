@@ -8,14 +8,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class Appointment {
     private String _id;
-    private LocalDateTime date;
+    private Date date;
+    private Duration duration;
     private Doctor doctor;
     private Patient patient;
-    private Duration duration;
     
     public Appointment() {}
     
-    public Appointment(String id, LocalDateTime date, Doctor doctor, Patient patient, Duration duration) {
+    // with id
+    public Appointment(String id, Date date, Doctor doctor, Patient patient, Duration duration) {
         this._id = id;
         this.date = date;
         this.doctor = doctor;
@@ -23,7 +24,8 @@ public class Appointment {
         this.duration = duration;
     }
     
-    public Appointment(LocalDateTime date, Doctor doctor, Patient patient, Duration duration) {
+    // without id
+    public Appointment(Doctor doctor, Patient patient, Date date, Duration duration) {
         this.date = date;
         this.doctor = doctor;
         this.patient = patient;
@@ -47,14 +49,14 @@ public class Appointment {
     /**
      * @return the date
      */
-    public LocalDateTime getDate() {
+    public Date getDate() {
         return date;
     }
 
     /**
      * @param date the date to set
      */
-    public void setDate(LocalDateTime date) {
+    public void setDate(Date date) {
         this.date = date;
     }
 

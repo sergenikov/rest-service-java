@@ -63,19 +63,16 @@ public class DoctorResource {
         searchQuery.put("name", name);
         FindIterable<Document> iterable = docCollection.find(searchQuery);
         
-        iterable.forEach(new Block<Document>() {
-            @Override
-            public void apply(final Document document) {
-                String name = document.getString("name");
+        for (Document document : iterable) {
+                String doc_name = document.getString("name");
                 String id = document.get("_id").toString();
-                Doctor d = new Doctor(name, id);
+                Doctor d = new Doctor(doc_name, id);
                 doctors.add(d);
-            }
-        });
+        }
 
         return doctors;
     }
-    
+   
     /**
      * Adding duplicates is allowed.
      * @param name name of the doctor to be added

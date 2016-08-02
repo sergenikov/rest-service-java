@@ -29,6 +29,11 @@ import org.xml.sax.SAXException;
 
 public class DoctorResourceTest extends JerseyTest {
     
+    final String TESTDOC1 = "testDoc1";
+    final String TESTDOC2 = "testDoc2";
+    final String TESTDOC3 = "testDoc3";
+    final String DOESNOTEXIST = "doesnotexist";
+    
     DatabaseConnection db = DatabaseConnection.getInstance();
     MongoCollection<Document> docCollection = db.mongodb.getCollection("Doctor");
     
@@ -38,9 +43,9 @@ public class DoctorResourceTest extends JerseyTest {
         List<Document> testDoctors = new ArrayList<>();
         
         Document testDoc1 = new Document();
-        testDoc1.append("name", "testDoc1");
+        testDoc1.append("name", TESTDOC1);
         Document testDoc2 = new Document();
-        testDoc2.append("name", "testDoc2");
+        testDoc2.append("name", TESTDOC2);
         
         testDoctors.add(testDoc1);
         testDoctors.add(testDoc2);
@@ -62,17 +67,33 @@ public class DoctorResourceTest extends JerseyTest {
     @Test
     public void testGetAllDoctors()
             throws SAXException, ParserConfigurationException, IOException {
-//        final String allDoctors = target("doctors/getall").request()
-//                .get(String.class);
-//        String docs = target("doctors/getall").request()
-//                .get(String.class);
-//        System.out.println(docs);
-//        assertEquals(2, getListSize(docs));
         GenericType<List<Doctor>> doctors = new GenericType<List<Doctor>>(){};
         List<Doctor> responseDoctors = target("doctors/getall")
                 .request(MediaType.APPLICATION_XML)
                 .get(doctors);
         assertEquals(responseDoctors.size(), 2);
+    }
+    
+    @Test
+    public void testGetDoctorByName()
+            throws SAXException, ParserConfigurationException, IOException {
+        GenericType<List<Doctor>> doctors = new GenericType<List<Doctor>>(){};
+        List<Doctor> responseDoctors = target("doctors/getbyname")
+                .queryParam("name", TESTDOC1)
+                .request(MediaType.APPLICATION_XML)
+                .get(doctors);
+        assertEquals(responseDoctors.size(), 1);
+    }
+    
+    @Test
+    public void testGetDoctorByNameDoesNotExist()
+            throws SAXException, ParserConfigurationException, IOException {
+        GenericType<List<Doctor>> doctors = new GenericType<List<Doctor>>(){};
+        List<Doctor> responseDoctors = target("doctors/getbyname")
+                .queryParam("name", DOESNOTEXIST)
+                .request(MediaType.APPLICATION_XML)
+                .get(doctors);
+        assertEquals(responseDoctors.size(), 0);
     }
     
     /**

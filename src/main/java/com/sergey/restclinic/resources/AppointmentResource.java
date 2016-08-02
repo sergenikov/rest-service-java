@@ -46,8 +46,6 @@ public class AppointmentResource {
         
         // Get dates
         String sampleDate = "2016-09-05 12:30";
-//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
-//        LocalDateTime dateTime = LocalDateTime.parse(sampleDate, formatter);
         DateFormat format = new SimpleDateFormat(DATE_FORMAT);
 
         
@@ -57,17 +55,22 @@ public class AppointmentResource {
                 + " duration "  + apt.getDuration()
                 + " date "      + apt.getDate().toString());
         
-        // get names from apt request
-        String pat_name = "tom";
-        String doc_name = "david";
-        System.out.println("AppointmentResource.createAppointment(): got doctor " 
-                + doc_name + "; got patient " + doc_name);
-        
         // lookup in db for ids
-        Doctor d = lookupDoctor(doc_name);
-        Patient p = lookupPatient(pat_name);
-        System.out.println("AppointmentResource.createAppointment(): Found doctor " 
-                + d.getName() + "; found patient " + p.getName());
+        Doctor d = lookupDoctor(apt.getDoctor().getName());
+        Patient p = lookupPatient(apt.getPatient().getName());
+        
+        // Error if can't find either patient or doctor
+        if (d == null) {
+            return Response.status(400)
+                    .entity("Appointment creating failed. Can't find doctor " 
+                            + apt.getDoctor().getName())
+                    .build();
+        } else if (p == null) {
+            return Response.status(400)
+                    .entity("Appointment creating failed. Can't find patient " 
+                            + apt.getPatient().getName())
+                    .build();
+        }
         
         // create new appointment object
         Appointment a;
@@ -75,7 +78,7 @@ public class AppointmentResource {
                 d,
                 p,
                 apt.getDate(),
-                30
+                apt.getDuration()
         );
         System.out.println("AppointmentResource.createAppointment(): Created appointment" 
                 + a.toString());
@@ -87,6 +90,9 @@ public class AppointmentResource {
         } catch (ParseException ex) {
             // TODO needs some error handling for server not to freak out
             Logger.getLogger(AppointmentResource.class.getName()).log(Level.SEVERE, null, ex);
+            return Response.status(500)
+                    .entity("Appointment creating failed. Error " + ex)
+                    .build();
         }
         
         // create document
@@ -132,9 +138,8 @@ public class AppointmentResource {
         
         Doctor d = null;
         
-        List<String> docs = new ArrayList<>();
-        for (Document document : iterable) {
-            docs.add(document.getString("name"));
+        if (iterable.first() == null) {
+            return null;
         }
         
         for (Document document : iterable) {
@@ -164,6 +169,10 @@ public class AppointmentResource {
         FindIterable<Document> iterable = docCollection.find(searchQuery);
         
         Patient p = null;
+        
+        if (iterable.first() == null) {
+            return null;
+        }
         
         for (Document document : iterable) {
             String doc_name = document.getString("name");

@@ -50,12 +50,12 @@ public class AppointmentResource {
 //        LocalDateTime dateTime = LocalDateTime.parse(sampleDate, formatter);
         DateFormat format = new SimpleDateFormat(DATE_FORMAT);
 
-        Date date = null;
-        try {
-            date = format.parse(sampleDate);
-        } catch (ParseException ex) {
-            Logger.getLogger(AppointmentResource.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        
+        System.out.println("AppointmentResource.createAppointment(): " 
+                + " doctor "    + apt.getDoctor().getName() 
+                + " patient "   + apt.getPatient().getName()
+                + " duration "  + apt.getDuration()
+                + " date "      + apt.getDate().toString());
         
         // get names from apt request
         String pat_name = "tom";
@@ -69,25 +69,32 @@ public class AppointmentResource {
         System.out.println("AppointmentResource.createAppointment(): Found doctor " 
                 + d.getName() + "; found patient " + p.getName());
         
-        // create appointment object
+        // create new appointment object
         Appointment a;
         a = new Appointment(
-                //new Doctor("drtom", "92837492834"),
                 d,
-                //new Patient("chris", "92837492834"),
                 p,
-                date,
-                Duration.ofMinutes(30)
+                apt.getDate(),
+                30
         );
         System.out.println("AppointmentResource.createAppointment(): Created appointment" 
                 + a.toString());
+        
+        // get date from request
+        Date date = null;
+        try {
+            date = format.parse(apt.getDate());
+        } catch (ParseException ex) {
+            // TODO needs some error handling for server not to freak out
+            Logger.getLogger(AppointmentResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
         // create document
         Document newDoc = new Document();
         newDoc.append("doc_id", a.getDoctor().getId());
         newDoc.append("pat_id", a.getPatient().getId());
-        newDoc.append("datetime", a.getDate());
-        newDoc.append("duration", a.getDuration().toMinutes());
+        newDoc.append("datetime", date);
+        newDoc.append("duration", a.getDuration());
         
         System.out.println("AppointmentResource.createAppointment(): Created document" 
                 + newDoc.toString());

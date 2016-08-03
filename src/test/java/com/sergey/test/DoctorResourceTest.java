@@ -104,14 +104,37 @@ public class DoctorResourceTest extends JerseyTest {
         Entity<Doctor> docEntity = Entity.entity(testDoc1, MediaType.APPLICATION_XML);
         target("doctors/add").request().post(docEntity);
         
-        // do get to check
+        assertEquals(1, getDoctors(TESTDOC1).size());
+        assertEquals("newDoc1", getDoctors("newDoc1").get(0).getName());
+    }
+    
+    @Test
+    public void testRemove() {        
+        GenericType<List<Doctor>> doctors = new GenericType<List<Doctor>>(){};
+        Response response = target("doctors/remove" + "/" + TESTDOC1)
+                .queryParam("name", TESTDOC1)
+                .request(MediaType.APPLICATION_XML)
+                .method("DELETE");
+        
+        assertEquals(response.getStatus(), 200);
+        assertEquals(0, getDoctors(TESTDOC1).size());
+    }
+    
+    /**
+     * Helper to get doctors from the db by name
+     * @param name doctor name
+     * @return List of Doctor objects
+     */
+    public List<Doctor> getDoctors(String name) {
+        
         GenericType<List<Doctor>> doctors = new GenericType<List<Doctor>>(){};
         List<Doctor> responseDoctors = target("doctors/getbyname")
-                .queryParam("name", "newDoc1")
+                .queryParam("name", name)
                 .request(MediaType.APPLICATION_XML)
                 .get(doctors);
-        assertEquals("newDoc1", responseDoctors.get(0).getName());
+        return responseDoctors;
     }
+    
     
     /*
     Test turned off: reading of response is not working this way. But this

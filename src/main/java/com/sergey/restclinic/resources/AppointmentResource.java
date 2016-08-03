@@ -126,42 +126,33 @@ public class AppointmentResource {
         System.out.println("AppointmentResource.createAppointment(): " 
                 + " doctor "    + apt.getDoctor().getName() 
                 + " patient "   + apt.getPatient().getName()
-                + " duration "  + apt.getDuration()
-                + " date "      + apt.getDate().toString());
+                + " startDateTime "  + apt.getStart()
+                + " endDateTime "      + apt.getEnd());
         
         // lookup in db for ids
-        Doctor d = lookupDoctor(apt.getDoctor().getName());
-        Patient p = lookupPatient(apt.getPatient().getName());
+        Doctor doctor = lookupDoctor(apt.getDoctor().getName());
+        Patient patient = lookupPatient(apt.getPatient().getName());
         
         // Error if can't find either patient or doctor
-        if (d == null) {
+        if (doctor == null) {
             return Response.status(400)
                     .entity("Appointment creating failed. Can't find doctor " 
                             + apt.getDoctor().getName())
                     .build();
-        } else if (p == null) {
+        } else if (patient == null) {
             return Response.status(400)
                     .entity("Appointment creating failed. Can't find patient " 
                             + apt.getPatient().getName())
                     .build();
         }
         
-        // create new appointment object
-        Appointment a;
-        a = new Appointment(
-                d,
-                p,
-                apt.getDate(),
-                apt.getDuration()
-        );
-        System.out.println("AppointmentResource.createAppointment(): Created appointment" 
-                + a.toString());
-        
         // get date from request
-        Date date = null;
+        Date start = null;
+        Date end = null;
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         try {
-            date = format.parse(apt.getDate());
+            start = format.parse(apt.getStart());
+            end = format.parse(apt.getEnd());
         } catch (ParseException ex) {
             // TODO needs some error handling for server not to freak out
             Logger.getLogger(AppointmentResource.class.getName()).log(Level.SEVERE, null, ex);
@@ -170,15 +161,15 @@ public class AppointmentResource {
                     .build();
         }
         
-        // create document
+        // create new appointment document for mongo
         Document newDoc = new Document();
-        newDoc.append("doc_id", a.getDoctor().getId());
-        newDoc.append("pat_id", a.getPatient().getId());
-        newDoc.append("datetime", date);
-        newDoc.append("duration", a.getDuration());
+        newDoc.append("doc_id", doctor.getId());
+        newDoc.append("pat_id", patient.getId());
+        newDoc.append("start", start);
+        newDoc.append("end", end);
         
-        System.out.println("AppointmentResource.createAppointment(): Created document" 
-                + newDoc.toString());
+//        System.out.println("AppointmentResource.createAppointment(): Created document" 
+//                + newDoc.toString());
 
         // insert document into the db
         try {

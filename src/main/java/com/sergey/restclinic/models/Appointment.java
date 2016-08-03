@@ -8,28 +8,38 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class Appointment {
     private String _id;
-    private String date;
     private Doctor doctor;
     private Patient patient;
-    private long duration; // duration in minutes; long for Duration object
+    private String start;
+    private String end;
+    
+//    private String date;
+//    private long duration; // duration in minutes; long for Duration object
     
     public Appointment() {}
+    
+    public Appointment(String start, String end, Doctor doctor, Patient patient) {
+        this.start = start;
+        this.end = end;
+        this.doctor = doctor;
+        this.patient = patient;
+    }
     
     // with id
     public Appointment(String id, String date, Doctor doctor, Patient patient, long duration) {
         this._id = id;
-        this.date = date;
+//        this.date = date;
         this.doctor = doctor;
         this.patient = patient;
-        this.duration = duration;
+//        this.duration = duration;
     }
     
     // without id
     public Appointment(Doctor doctor, Patient patient, String date, long duration) {
-        this.date = date;
+//        this.date = date;
         this.doctor = doctor;
         this.patient = patient;
-        this.duration = duration;
+//        this.duration = duration;
     }
 
     /**
@@ -45,20 +55,20 @@ public class Appointment {
     public void setId(String _id) {
         this._id = _id;
     }
-
-    /**
-     * @return the date
-     */
-    public String getDate() {
-        return date;
-    }
-
-    /**
-     * @param date the date to set
-     */
-    public void setDate(String date) {
-        this.date = date;
-    }
+//
+//    /**
+//     * @return the date
+//     */
+//    public String getDate() {
+//        return date;
+//    }
+//
+//    /**
+//     * @param date the date to set
+//     */
+//    public void setDate(String date) {
+//        this.date = date;
+//    }
 
     /**
      * @return the doctor
@@ -88,17 +98,45 @@ public class Appointment {
         this.patient = patient;
     }
 
+//    /**
+//     * @return the duration
+//     */
+//    public long getDuration() {
+//        return duration;
+//    }
+//
+//    /**
+//     * @param duration the duration to set
+//     */
+//    public void setDuration(long duration) {
+//        this.duration = duration;
+//    }
+
     /**
-     * @return the duration
+     * @return the startDatetime
      */
-    public long getDuration() {
-        return duration;
+    public String getStart() {
+        return start;
     }
 
     /**
-     * @param duration the duration to set
+     * @param startDatetime the startDatetime to set
      */
-    public void setDuration(long duration) {
-        this.duration = duration;
+    public void setStart(String startDatetime) {
+        this.start = startDatetime;
+    }
+
+    /**
+     * @return the endDatetime
+     */
+    public String getEnd() {
+        return end;
+    }
+
+    /**
+     * @param endDatetime the endDatetime to set
+     */
+    public void setEnd(String endDatetime) {
+        this.end = endDatetime;
     }
 }

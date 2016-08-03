@@ -12,6 +12,10 @@ public class Doctor {
     // no-op constructor for safety
     public Doctor() {}
     
+    public Doctor(String name) {
+        this.name = name;
+    }
+    
     public Doctor(String name, String id) {
         this.name = name;
         this._id = id;

@@ -10,6 +10,10 @@ public class Patient {
     // no-op constructor for safety
     public Patient() {}
     
+    public Patient(String name) {
+        this.name = name;
+    }
+    
     public Patient(String name, String id) {
         this.name = name;
         this.id = id;

@@ -166,6 +166,8 @@ public class AppointmentResource {
                     .build();
         }
         
+        //do lookup and check here
+        
         // create new appointment document for mongo
         Document newDoc = new Document();
         newDoc.append("doc_id", doctor.getId());
@@ -270,7 +272,7 @@ public class AppointmentResource {
      * When iterating over doctors found assumes there is only one doctor
      * with that name - return first document found.
      */
-    public Doctor lookupDoctor(String name) {
+    static public Doctor lookupDoctor(String name) {
         DatabaseConnection db = DatabaseConnection.getInstance();
         MongoCollection<Document> docCollection = db.mongodb.getCollection("Doctor");
         
@@ -302,7 +304,7 @@ public class AppointmentResource {
      * with that name - return first document found.
      * TODO In reality phone number or some unique id will be used.
      */
-    public Patient lookupPatient(String name) {
+    static public Patient lookupPatient(String name) {
         DatabaseConnection db = DatabaseConnection.getInstance();
         MongoCollection<Document> docCollection = db.mongodb.getCollection("Patient");
         
@@ -326,32 +328,34 @@ public class AppointmentResource {
         return p;
     }
     
-//    /**
-//     * 
-//     * @param apt appointment to lookup in the db
-//     * @return 
-//     */
-//    public Appointment lookupAppointment(String date, Doctor doctor, 
-//            Patient patient, long duration) {
-//        
-//        Appointment apt = new Appointment(doctor, patient, date, duration);
-//        DatabaseConnection db = DatabaseConnection.getInstance();
-//        MongoCollection<Document> docCollection = db.mongodb.getCollection("Appointment");
-//        
-//        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-//        BasicDBObject searchQuery = new BasicDBObject();
-//        searchQuery.put("date", date);
-//        searchQuery.put("doc_id", doctor.getId());
-//        searchQuery.put("pat_id", patient.getId());
-//        searchQuery.put("duration", duration);
-//        FindIterable<Document> appointments = docCollection.find(searchQuery);
-//        
-//        if (appointments.first() == null) {
-//            return null;
-//        }
-//        
-//        return apt;
-//    }
+    /**
+     * 
+     * @param apt appointment to lookup in the db
+     * @return appointment found or null if not found
+     */
+    public Appointment lookupAppointment(Doctor doctor, Patient patient, 
+            String start, String end) throws ParseException {
+        
+        Appointment apt = new Appointment(start, end, doctor, patient);
+        DatabaseConnection db = DatabaseConnection.getInstance();
+        MongoCollection<Document> docCollection = db.mongodb.getCollection("Appointment");
+        
+        Date[] dates = parseDates(start, end);
+    
+        // find overlapping start and end dates for a given doctor
+        BasicDBObject searchQuery = new BasicDBObject(
+                "start", 
+                new BasicDBObject("$gte", dates[0]).append("$lte", dates[1]));
+        searchQuery.put("doc_id", doctor.getId());
+
+        FindIterable<Document> appointments = docCollection.find(searchQuery);
+        
+        if (appointments.first() == null) {
+            return null;
+        }
+
+        return apt;
+    }
     
     /**
      * Create generic Response for when document is not found in the db.
@@ -364,6 +368,21 @@ public class AppointmentResource {
                 .entity("Appointment creating failed. Can't find patient " 
                         + docName)
                 .build();
+    }
+    
+    /**
+     * Parse two input dates into Date object.
+     * @param startDate
+     * @param endDate
+     * @return Date array
+     */
+    public Date[] parseDates(String startDate, String endDate) throws ParseException {
+        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        Date[] dates = new Date[2];
+        dates[0] = format.parse(startDate);;
+        dates[1] = format.parse(endDate);;
+        return dates;
     }
 }
 

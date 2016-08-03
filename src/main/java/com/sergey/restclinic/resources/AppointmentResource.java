@@ -197,7 +197,6 @@ public class AppointmentResource {
      */
     @DELETE
     @Path("remove")
-    //@Produces(MediaType.APPLICATION_XML)
     public Response deleteAppointment(
             @QueryParam("doc_name") String param_doc_name,
             @QueryParam("pat_name") String param_pat_name,

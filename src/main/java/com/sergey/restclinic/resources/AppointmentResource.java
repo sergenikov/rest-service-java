@@ -323,6 +323,33 @@ public class AppointmentResource {
     }
     
     /**
+     * 
+     * @param apt appointment to lookup in the db
+     * @return 
+     */
+    public Appointment lookupAppointment(String date, Doctor doctor, 
+            Patient patient, long duration) {
+        
+        Appointment apt = new Appointment(doctor, patient, date, duration);
+        DatabaseConnection db = DatabaseConnection.getInstance();
+        MongoCollection<Document> docCollection = db.mongodb.getCollection("Appointment");
+        
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        BasicDBObject searchQuery = new BasicDBObject();
+        searchQuery.put("date", date);
+        searchQuery.put("doc_id", doctor.getId());
+        searchQuery.put("pat_id", patient.getId());
+        searchQuery.put("duration", duration);
+        FindIterable<Document> appointments = docCollection.find(searchQuery);
+        
+        if (appointments.first() == null) {
+            return null;
+        }
+        
+        return apt;
+    }
+    
+    /**
      * Create generic Response for when document is not found in the db.
      * @param docName
      * @return 

@@ -129,6 +129,22 @@ public class AppointmentResourceTest {
         assertEquals(1, apts.size());
     }
     
+    // No overlap
+    @Test
+    public void lookupAppointmentWaitlistTest4() throws ParseException {
+        String start = "2016-08-05T10:10:00Z";
+        String end = "2016-08-05T10:20:00Z";
+        AppointmentResource a = new AppointmentResource();
+        Doctor doctor = new Doctor();
+        Patient patient = new Patient();
+        List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
+        assertEquals(0, apts.size());
+    }
+    
+    
+    
+    //********** HELPERS **********
+    
     /**
      * Insert two doctors in the db.
      */

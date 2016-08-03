@@ -74,7 +74,7 @@ public class AppointmentResourceTest {
         assertEquals(1, apts.size());
     }
     
-//    @Test
+    @Test
     public void lookupAppointmentTestExact() throws ParseException {
         String start = INIT_DATE_START;
         String end = INIT_DATE_END;
@@ -83,8 +83,8 @@ public class AppointmentResourceTest {
         AppointmentResource a = new AppointmentResource();
         Doctor doctor = new Doctor();
         Patient patient = new Patient();
-//        Appointment foundApt = a.lookupAppointment(doctor, patient, start, end);
-//        assertNotNull(foundApt);
+        List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
+        assertEquals(2, apts.size());
     }
     
     /**

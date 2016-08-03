@@ -355,7 +355,10 @@ public class AppointmentResource {
         BasicDBObject query = new BasicDBObject();
         query.put("start", new BasicDBObject("$lte", dates[0]));
         query.put("end", new BasicDBObject("$gte", dates[0]));
-        String queryString = query.toJson();
+        query.put("start", new BasicDBObject("$lte", dates[1]));
+        query.put("end", new BasicDBObject("$gte", dates[1]));
+        
+        String queryString = query.toJson(); // just for reference DELETE this
         
         FindIterable<Document> appointments = aptCollection.find(query);
         

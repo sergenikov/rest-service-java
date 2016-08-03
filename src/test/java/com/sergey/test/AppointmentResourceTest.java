@@ -7,6 +7,7 @@ import com.sergey.restclinic.models.Appointment;
 import com.sergey.restclinic.models.Doctor;
 import com.sergey.restclinic.models.Patient;
 import com.sergey.restclinic.resources.AppointmentResource;
+import com.sergey.restclinic.resources.DoctorResource;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -17,8 +18,14 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.bson.Document;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
 import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -26,7 +33,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
-public class AppointmentResourceTest {
+public class AppointmentResourceTest extends JerseyTest {
     
     final String TESTDOC1 = "testDoc1";
     final String TESTDOC2 = "testDoc2";
@@ -45,6 +52,11 @@ public class AppointmentResourceTest {
     MongoCollection<Document> patCollection = db.mongodb.getCollection("Patient");
     MongoCollection<Document> aptCollection = db.mongodb.getCollection("Appointment");
     
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(AppointmentResource.class);
+    }
+    
     @Before
     public void setup() throws ParseException {
         insertDoctors();
@@ -61,6 +73,7 @@ public class AppointmentResourceTest {
         aptCollection.deleteMany(searchQuery);
     }
     
+    // Create sample appointment and the find it
     @Test
     public void lookupAppointmentTest() throws ParseException {
         String start = "2016-08-05T14:10:00Z";
@@ -71,7 +84,7 @@ public class AppointmentResourceTest {
         Doctor doctor = AppointmentResource.lookupDoctor(TESTDOC1);
         Patient patient = AppointmentResource.lookupPatient(TESTPAT1);
         List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
-        assertEquals(1, apts.size());
+        assertEquals(2, apts.size());
     }
     
     @Test
@@ -141,7 +154,39 @@ public class AppointmentResourceTest {
         assertEquals(0, apts.size());
     }
     
+    // Valid addition, no overlap
+    @Test
+    public void testAddAppointmentNoOverlap() throws ParseException {
+        String start = "2016-08-05T10:10:00Z";
+        String end = "2016-08-05T11:10:00Z";
+        Doctor doctor = new Doctor(TESTDOC1);
+        Patient patient = new Patient(TESTPAT1);
+        Appointment apt = new Appointment(start, end, doctor, patient);
+                
+        Entity<Appointment> aptEntity = Entity.entity(apt, MediaType.APPLICATION_XML);
+        target("appointment/add").request().post(aptEntity);
+        
+        AppointmentResource a = new AppointmentResource();
+        List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
+        assertEquals(1, apts.size());
+    }
     
+    // Valid addition, guaranteed overlap
+    @Test
+    public void testAddAppointmentOverlap() throws ParseException {
+        String start = INIT_DATE_START;
+        String end = INIT_DATE_END;
+        Doctor doctor = new Doctor(TESTDOC1);
+        Patient patient = new Patient(TESTPAT1);
+        Appointment apt = new Appointment(start, end, doctor, patient);
+                
+        Entity<Appointment> aptEntity = Entity.entity(apt, MediaType.APPLICATION_XML);
+        target("appointment/add").request().post(aptEntity);
+        
+        AppointmentResource a = new AppointmentResource();
+        List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
+        assertEquals(1, apts.size());
+    }
     
     //********** HELPERS **********
     
@@ -201,4 +246,19 @@ public class AppointmentResourceTest {
         
         aptCollection.insertOne(newDoc);
     }
+    
+//     /**
+//     * Helper to get doctors from the db by name
+//     * @param name doctor name
+//     * @return List of Doctor objects
+//     */
+//    public List<Doctor> getAppointments(String start, String end, Doctor doctor) {
+//        
+//        GenericType<List<Appointment>> apts = new GenericType<List<Appointment>>(){};
+//        List<Appointment> responseApts = target("appointments/get")
+//                .queryParam("name", name)
+//                .request(MediaType.APPLICATION_XML)
+//                .get(doctors);
+//        return responseDoctors;
+//    }
 }

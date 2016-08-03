@@ -121,6 +121,7 @@ public class AppointmentResource {
     public Response createAppointment(Appointment apt) {
         DatabaseConnection db = DatabaseConnection.getInstance();
         MongoCollection<Document> docCollection = db.mongodb.getCollection(CURRENT_COLLECTION);
+        MongoCollection<Document> waitlistCollection = db.mongodb.getCollection("Waitlist");
         
         // Get dates
         DateFormat format = new SimpleDateFormat(DATE_FORMAT, Locale.ENGLISH);
@@ -149,13 +150,16 @@ public class AppointmentResource {
                     .build();
         }
         
+        List<Appointment> apts;
         // get date from request
+        // and do overlap lookup and check here
         Date start = null;
         Date end = null;
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         try {
             start = format.parse(apt.getStart());
             end = format.parse(apt.getEnd());
+            apts = lookupAppointment(doctor, patient, apt.getStart(), apt.getEnd());
         } catch (ParseException ex) {
             // TODO needs some error handling for server not to freak out
             Logger.getLogger(AppointmentResource.class.getName()).log(Level.SEVERE, null, ex);
@@ -164,7 +168,10 @@ public class AppointmentResource {
                     .build();
         }
         
-        //do lookup and check here
+        if (apts.size() > 0) {
+            return Response.status(400)
+                    .entity("Appointment overlap. Added to waitlist").build();
+        }
         
         // create new appointment document for mongo
         Document newDoc = new Document();

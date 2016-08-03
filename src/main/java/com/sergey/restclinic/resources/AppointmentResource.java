@@ -1,6 +1,8 @@
 package com.sergey.restclinic.resources;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.mongodb.MongoWriteConcernException;
 import com.mongodb.client.FindIterable;
@@ -326,8 +328,12 @@ public class AppointmentResource {
     
     /**
      * 
-     * @param apt appointment to lookup in the db
+     * @param doctor
+     * @param patient
+     * @param start
+     * @param end
      * @return appointment found or null if not found
+     * @throws java.text.ParseException
      */
     public List<Appointment> lookupAppointment(Doctor doctor, Patient patient, 
             String start, String end) throws ParseException {
@@ -341,15 +347,21 @@ public class AppointmentResource {
         Date[] dates = parseDates(start, end);
     
         // find overlapping start and end dates for a given doctor
-        BasicDBObject query = new BasicDBObject();
-        query.put("start", new BasicDBObject("$lte", dates[0]));
-        query.put("end", new BasicDBObject("$gte", dates[0]));
-        query.put("start", new BasicDBObject("$lte", dates[1]));
-        query.put("end", new BasicDBObject("$gte", dates[1]));
+        // Create or query
+        BasicDBObject query1 = new BasicDBObject();
+        query1.put("start", new BasicDBObject("$lte", dates[0]));
+        query1.put("end", new BasicDBObject("$gte", dates[0]));
         
-        String queryString = query.toJson(); // just for reference DELETE this
+        BasicDBObject query2 = new BasicDBObject();
+        query2.put("start", new BasicDBObject("$lte", dates[1]));
+        query2.put("end", new BasicDBObject("$gte", dates[1]));
         
-        FindIterable<Document> appointments = aptCollection.find(query);
+        BasicDBList or = new BasicDBList();
+        or.add(query1);
+        or.add(query2);
+        BasicDBObject orQuery = new BasicDBObject("$or", or);
+
+        FindIterable<Document> appointments = aptCollection.find(orQuery);
         
         for (Document d : appointments) {
             apts.add(new Appointment(
@@ -391,7 +403,7 @@ public class AppointmentResource {
     }
     
     /**
-     * Parse two input dates into Date object.
+     * Parse single date into Date object.
      * @param date
      * @return Date array
      * @throws java.text.ParseException
@@ -402,17 +414,3 @@ public class AppointmentResource {
         return format.parse(date);
     }
 }
-
-
-/*
-<appointment>
-    <doctor>
-        <name>david</name>
-    </doctor>
-    <patient>
-        <name>chris</name>
-    </patient>
-    <start>2016-08-05T16:00:00Z</start>
-    <end>2016-08-05T16:30:00Z</end>
-</appointment>
-*/

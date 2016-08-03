@@ -87,6 +87,48 @@ public class AppointmentResourceTest {
         assertEquals(2, apts.size());
     }
     
+    // Start before INIT start time and end after INIT start time
+    //      ------------- init
+    // -------- new
+    @Test
+    public void lookupAppointmentWaitlistTest1() throws ParseException {
+        String start = "2016-08-05T13:00:00Z";
+        String end = "2016-08-05T14:10:00Z";
+        AppointmentResource a = new AppointmentResource();
+        Doctor doctor = new Doctor();
+        Patient patient = new Patient();
+        List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
+        assertEquals(1, apts.size());
+    }
+    
+    // ------------- init
+    //           -------- new
+    // Start after INIT start time and end after INIT end time
+    @Test
+    public void lookupAppointmentWaitlistTest2() throws ParseException {
+        String start = "2016-08-05T14:15:00Z";
+        String end = "2016-08-05T15:00:00Z";
+        AppointmentResource a = new AppointmentResource();
+        Doctor doctor = new Doctor();
+        Patient patient = new Patient();
+        List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
+        assertEquals(1, apts.size());
+    }
+    
+    // Start after INIT start and end before INIT end time
+    //      ------------- init
+    //         -------- new
+    @Test
+    public void lookupAppointmentWaitlistTest3() throws ParseException {
+        String start = "2016-08-05T14:10:00Z";
+        String end = "2016-08-05T14:20:00Z";
+        AppointmentResource a = new AppointmentResource();
+        Doctor doctor = new Doctor();
+        Patient patient = new Patient();
+        List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
+        assertEquals(1, apts.size());
+    }
+    
     /**
      * Insert two doctors in the db
      */

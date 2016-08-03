@@ -6,6 +6,7 @@ import com.mongodb.MongoException;
 import com.mongodb.MongoWriteConcernException;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.result.DeleteResult;
 import com.sergey.restclinic.database.DatabaseConnection;
 import com.sergey.restclinic.models.Appointment;
 import com.sergey.restclinic.models.Doctor;
@@ -59,12 +60,12 @@ public class AppointmentResource {
         MongoCollection<Document> docCollection = db.mongodb.getCollection(CURRENT_COLLECTION);
         
         // lookup in db for ids
-        Doctor d = lookupDoctor(param_doc_name);
-        Patient p = lookupPatient(param_pat_name);
+        Doctor doctor = lookupDoctor(param_doc_name);
+        Patient patient = lookupPatient(param_pat_name);
         
-        if (d == null) {
+        if (doctor == null) {
             documentNotFoundError(param_doc_name);
-        } else if (p == null) {
+        } else if (patient == null) {
             documentNotFoundError(param_pat_name);
         }
         
@@ -82,8 +83,8 @@ public class AppointmentResource {
         }
         
         BasicDBObject searchQuery = new BasicDBObject();
-        searchQuery.put("doc_id", d.getId());
-        searchQuery.put("pat_id", p.getId());
+        searchQuery.put("doc_id", doctor.getId());
+        searchQuery.put("pat_id", patient.getId());
         searchQuery.put("datetime", date);
         FindIterable<Document> iterable = docCollection.find(searchQuery);
         
@@ -100,10 +101,10 @@ public class AppointmentResource {
         // (2) know we found appointment - date OK as well
         for (Document document : iterable) {
             appointment = new Appointment(
-                    d,
-                    p,
-                    param_date,
-                    document.getLong("duration")
+                    "",
+                    "",
+                    doctor,
+                    patient
             );
             appts.add(appointment);
         }
@@ -200,7 +201,8 @@ public class AppointmentResource {
     public Response deleteAppointment(
             @QueryParam("doc_name") String param_doc_name,
             @QueryParam("pat_name") String param_pat_name,
-            @QueryParam("date") String param_date) {
+            @QueryParam("start") String param_start,
+            @QueryParam("end") String param_end) {
         
         DatabaseConnection db = DatabaseConnection.getInstance();
         MongoCollection<Document> docCollection = db.mongodb.getCollection(CURRENT_COLLECTION);
@@ -217,10 +219,12 @@ public class AppointmentResource {
         
         DateFormat format = new SimpleDateFormat(DATE_FORMAT);
         // get date from request
-        Date date = null;
+        Date start = null;
+        Date end = null;
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         try {
-            date = format.parse(param_date);
+            start = format.parse(param_start);
+            end = format.parse(param_end);
         } catch (ParseException ex) {
             // TODO needs some error handling for server not to freak out
             Logger.getLogger(AppointmentResource.class.getName()).log(Level.SEVERE, null, ex);
@@ -231,10 +235,12 @@ public class AppointmentResource {
         BasicDBObject searchQuery = new BasicDBObject();
         searchQuery.put("doc_id", d.getId());
         searchQuery.put("pat_id", p.getId());
-        searchQuery.put("datetime", date);
+        searchQuery.put("start", start);
+        searchQuery.put("end", end);
         
+        DeleteResult deleteResult;
         try {
-            docCollection.deleteOne(searchQuery);
+            deleteResult = docCollection.deleteOne(searchQuery);
         } catch (MongoWriteConcernException e) {
             System.err.println(e);
             return Response.status(400)
@@ -245,6 +251,10 @@ public class AppointmentResource {
             return Response.status(400)
                     .entity("Removing appointment failed; error " + e)
                     .build();
+        }
+        
+        if (deleteResult.getDeletedCount() == 0) {
+            return Response.status(400).entity("Failed to remove.").build();
         }
         
         return Response.status(200).entity("Success. Removed appointment").build();
@@ -313,32 +323,32 @@ public class AppointmentResource {
         return p;
     }
     
-    /**
-     * 
-     * @param apt appointment to lookup in the db
-     * @return 
-     */
-    public Appointment lookupAppointment(String date, Doctor doctor, 
-            Patient patient, long duration) {
-        
-        Appointment apt = new Appointment(doctor, patient, date, duration);
-        DatabaseConnection db = DatabaseConnection.getInstance();
-        MongoCollection<Document> docCollection = db.mongodb.getCollection("Appointment");
-        
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        BasicDBObject searchQuery = new BasicDBObject();
-        searchQuery.put("date", date);
-        searchQuery.put("doc_id", doctor.getId());
-        searchQuery.put("pat_id", patient.getId());
-        searchQuery.put("duration", duration);
-        FindIterable<Document> appointments = docCollection.find(searchQuery);
-        
-        if (appointments.first() == null) {
-            return null;
-        }
-        
-        return apt;
-    }
+//    /**
+//     * 
+//     * @param apt appointment to lookup in the db
+//     * @return 
+//     */
+//    public Appointment lookupAppointment(String date, Doctor doctor, 
+//            Patient patient, long duration) {
+//        
+//        Appointment apt = new Appointment(doctor, patient, date, duration);
+//        DatabaseConnection db = DatabaseConnection.getInstance();
+//        MongoCollection<Document> docCollection = db.mongodb.getCollection("Appointment");
+//        
+//        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+//        BasicDBObject searchQuery = new BasicDBObject();
+//        searchQuery.put("date", date);
+//        searchQuery.put("doc_id", doctor.getId());
+//        searchQuery.put("pat_id", patient.getId());
+//        searchQuery.put("duration", duration);
+//        FindIterable<Document> appointments = docCollection.find(searchQuery);
+//        
+//        if (appointments.first() == null) {
+//            return null;
+//        }
+//        
+//        return apt;
+//    }
     
     /**
      * Create generic Response for when document is not found in the db.
@@ -355,3 +365,15 @@ public class AppointmentResource {
 }
 
 
+/*
+<appointment>
+    <doctor>
+        <name>david</name>
+    </doctor>
+    <patient>
+        <name>chris</name>
+    </patient>
+    <start>2016-08-05T16:00:00Z</start>
+    <end>2016-08-05T16:30:00Z</end>
+</appointment>
+*/

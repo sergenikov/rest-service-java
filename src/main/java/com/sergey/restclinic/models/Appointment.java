@@ -24,23 +24,6 @@ public class Appointment {
         this.doctor = doctor;
         this.patient = patient;
     }
-    
-    // with id
-    public Appointment(String id, String date, Doctor doctor, Patient patient, long duration) {
-        this._id = id;
-//        this.date = date;
-        this.doctor = doctor;
-        this.patient = patient;
-//        this.duration = duration;
-    }
-    
-    // without id
-    public Appointment(Doctor doctor, Patient patient, String date, long duration) {
-//        this.date = date;
-        this.doctor = doctor;
-        this.patient = patient;
-//        this.duration = duration;
-    }
 
     /**
      * @return the _id

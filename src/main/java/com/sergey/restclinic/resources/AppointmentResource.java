@@ -1,11 +1,18 @@
 package com.sergey.restclinic.resources;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.Block;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.mongodb.MongoWriteConcernException;
+import com.mongodb.QueryBuilder;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import static com.mongodb.client.model.Filters.gt;
+import static com.mongodb.client.model.Filters.lt;
 import com.mongodb.client.result.DeleteResult;
 import com.sergey.restclinic.database.DatabaseConnection;
 import com.sergey.restclinic.models.Appointment;
@@ -333,28 +340,33 @@ public class AppointmentResource {
      * @param apt appointment to lookup in the db
      * @return appointment found or null if not found
      */
-    public Appointment lookupAppointment(Doctor doctor, Patient patient, 
+    public List<Appointment> lookupAppointment(Doctor doctor, Patient patient, 
             String start, String end) throws ParseException {
+        
+        List<Appointment> apts = new ArrayList<>();
         
         Appointment apt = new Appointment(start, end, doctor, patient);
         DatabaseConnection db = DatabaseConnection.getInstance();
-        MongoCollection<Document> docCollection = db.mongodb.getCollection("Appointment");
+        MongoCollection<Document> aptCollection = db.mongodb.getCollection("Appointment");
         
         Date[] dates = parseDates(start, end);
     
         // find overlapping start and end dates for a given doctor
-        BasicDBObject searchQuery = new BasicDBObject(
-                "start", 
-                new BasicDBObject("$gte", dates[0]).append("$lte", dates[1]));
-        searchQuery.put("doc_id", doctor.getId());
-
-        FindIterable<Document> appointments = docCollection.find(searchQuery);
+        BasicDBObject query = new BasicDBObject();
+        query.put("start", new BasicDBObject("$lte", dates[0]));
+        query.put("end", new BasicDBObject("$gte", dates[0]));
+        String queryString = query.toJson();
         
-        if (appointments.first() == null) {
-            return null;
+        FindIterable<Document> appointments = aptCollection.find(query);
+        
+        for (Document d : appointments) {
+            apts.add(new Appointment(
+                    d.getDate("start").toString(),
+                    d.getDate("end").toString(),
+                    doctor,
+                    patient));
         }
-
-        return apt;
+        return apts;
     }
     
     /**
@@ -383,6 +395,18 @@ public class AppointmentResource {
         dates[0] = format.parse(startDate);;
         dates[1] = format.parse(endDate);;
         return dates;
+    }
+    
+    /**
+     * Parse two input dates into Date object.
+     * @param startDate
+     * @param endDate
+     * @return Date array
+     */
+    public Date parseDate(String date) throws ParseException {
+        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        return format.parse(date);
     }
 }
 

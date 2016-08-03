@@ -45,7 +45,7 @@ public class AppointmentResource {
      * Return all appointments that match all of these requirements
      * @param param_doc_name doctor name
      * @param param_pat_name patient name
-     * @param param_date     date and time in local time
+     * @param param_start     date and time in local time
      * @return 
      */
     @GET
@@ -54,7 +54,8 @@ public class AppointmentResource {
     public List<Appointment> getAppointment(
             @QueryParam("doc_name") String param_doc_name,
             @QueryParam("pat_name") String param_pat_name,
-            @QueryParam("date") String param_date) {
+            @QueryParam("start") String param_start,
+            @QueryParam("end") String param_end) {
         
         DatabaseConnection db = DatabaseConnection.getInstance();
         MongoCollection<Document> docCollection = db.mongodb.getCollection(CURRENT_COLLECTION);
@@ -71,10 +72,12 @@ public class AppointmentResource {
         
         DateFormat format = new SimpleDateFormat(DATE_FORMAT);
         // get date from request
-        Date date;
+        Date start;
+        Date end;
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         try {
-            date = format.parse(param_date);
+            start = format.parse(param_start);
+            end = format.parse(param_end);
         } catch (ParseException ex) {
             // TODO needs some error handling for server not to freak out
             Logger.getLogger(AppointmentResource.class.getName()).log(Level.SEVERE, null, ex);
@@ -85,7 +88,8 @@ public class AppointmentResource {
         BasicDBObject searchQuery = new BasicDBObject();
         searchQuery.put("doc_id", doctor.getId());
         searchQuery.put("pat_id", patient.getId());
-        searchQuery.put("datetime", date);
+        searchQuery.put("start", start);
+        searchQuery.put("end", end);
         FindIterable<Document> iterable = docCollection.find(searchQuery);
         
         Appointment appointment = null;
@@ -101,15 +105,15 @@ public class AppointmentResource {
         // (2) know we found appointment - date OK as well
         for (Document document : iterable) {
             appointment = new Appointment(
-                    "",
-                    "",
-                    doctor,
-                    patient
+                    start.toString(),
+                    end.toString(),
+                    lookupDoctor(param_doc_name),
+                    lookupPatient(param_pat_name)
             );
             appts.add(appointment);
         }
         
-        System.out.println("before returning");
+//        System.out.println("before returning");
         return appts;
     }
     

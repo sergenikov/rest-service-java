@@ -1,18 +1,10 @@
 package com.sergey.restclinic.resources;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.Block;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.mongodb.MongoWriteConcernException;
-import com.mongodb.QueryBuilder;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import static com.mongodb.client.model.Filters.gt;
-import static com.mongodb.client.model.Filters.lt;
 import com.mongodb.client.result.DeleteResult;
 import com.sergey.restclinic.database.DatabaseConnection;
 import com.sergey.restclinic.models.Appointment;
@@ -21,9 +13,6 @@ import com.sergey.restclinic.models.Patient;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -390,21 +379,22 @@ public class AppointmentResource {
      * @param startDate
      * @param endDate
      * @return Date array
+     * @throws java.text.ParseException
      */
     public Date[] parseDates(String startDate, String endDate) throws ParseException {
         DateFormat format = new SimpleDateFormat(DATE_FORMAT);
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         Date[] dates = new Date[2];
-        dates[0] = format.parse(startDate);;
-        dates[1] = format.parse(endDate);;
+        dates[0] = format.parse(startDate);
+        dates[1] = format.parse(endDate);
         return dates;
     }
     
     /**
      * Parse two input dates into Date object.
-     * @param startDate
-     * @param endDate
+     * @param date
      * @return Date array
+     * @throws java.text.ParseException
      */
     public Date parseDate(String date) throws ParseException {
         DateFormat format = new SimpleDateFormat(DATE_FORMAT);

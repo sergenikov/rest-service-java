@@ -58,15 +58,16 @@ Will get list of appointments for `Doctor=david, Patient=chris, Date=2016-05-12T
 
 ###Post
 Will add new appointment to the database. Add the following XML to request.
+This operation will fail if either patient or doctor does not exist.
 ```
 <appointment>
-	<doctor>
-		<name>david</name>
-	</doctor>
-	<patient>
-		<name>chris</name>
-	</patient>
-	<date>2016-05-12T23:00:00Z</date>
-	<duration>1600</duration>
+    <doctor>
+        <name>david</name>
+    </doctor>
+    <patient>
+        <name>chris</name>
+    </patient>
+    <start>2016-08-05T16:00:00Z</start>
+    <end>2016-08-05T16:30:00Z</end>
 </appointment>
 ```

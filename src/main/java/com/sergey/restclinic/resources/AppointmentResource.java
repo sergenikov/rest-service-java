@@ -347,7 +347,6 @@ public class AppointmentResource {
         Date[] dates = parseDates(start, end);
     
         // find overlapping start and end dates for a given doctor
-        // Create or query
         BasicDBObject query1 = new BasicDBObject();
         query1.put("start", new BasicDBObject("$lte", dates[0]));
         query1.put("end", new BasicDBObject("$gte", dates[0]));

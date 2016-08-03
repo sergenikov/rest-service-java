@@ -103,7 +103,7 @@ public class AppointmentResourceTest {
     
     // ------------- init
     //           -------- new
-    // Start after INIT start time and end after INIT end time
+    // Start after INIT start time and end after INIT end time.
     @Test
     public void lookupAppointmentWaitlistTest2() throws ParseException {
         String start = "2016-08-05T14:15:00Z";
@@ -130,7 +130,7 @@ public class AppointmentResourceTest {
     }
     
     /**
-     * Insert two doctors in the db
+     * Insert two doctors in the db.
      */
     public void insertDoctors() {
         // insert 2 test doctors

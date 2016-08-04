@@ -10,6 +10,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,7 +29,7 @@ public class DateTimeParser {
      * @return Date
      */
     public Date parseDate(String dateString) throws ParseException {
-        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
+        DateFormat format = new SimpleDateFormat(DATE_FORMAT, Locale.ENGLISH);
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         Date date;
         date = format.parse(dateString);

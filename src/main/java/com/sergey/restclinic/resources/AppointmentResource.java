@@ -402,6 +402,60 @@ public class AppointmentResource {
      * @param patient
      * @param start
      * @param end
+     * @return all overlapping appointments found or null if not found
+     * @throws java.text.ParseException
+     */
+    public List<Appointment> lookupAppointment(Doctor doctor, Patient patient, 
+            Date start, Date end) throws ParseException {
+        
+        List<Appointment> apts = new ArrayList<>();
+        
+        
+        DatabaseConnection db = DatabaseConnection.getInstance();
+        MongoCollection<Document> aptCollection = db.mongodb.getCollection("Appointment");
+        
+        Date[] dates = {start, end};
+    
+        // find overlapping start and end dates for a given doctor
+        BasicDBObject query1 = new BasicDBObject();
+        query1.put("start", new BasicDBObject("$lte", dates[0]));
+        query1.put("end", new BasicDBObject("$gte", dates[0]));
+        query1.put("doc_id", doctor.getId());
+        
+        BasicDBObject query2 = new BasicDBObject();
+        query2.put("start", new BasicDBObject("$lte", dates[1]));
+        query2.put("end", new BasicDBObject("$gte", dates[1]));
+        query2.put("doc_id", doctor.getId());
+        
+        BasicDBObject query3 = new BasicDBObject();
+        query3.put("start", new BasicDBObject("$lte", dates[0]));
+        query3.put("end", new BasicDBObject("$gte", dates[1]));
+        query3.put("doc_id", doctor.getId());
+        
+        BasicDBList or = new BasicDBList();
+        or.add(query1);
+        or.add(query2);
+        or.add(query2);
+        BasicDBObject orQuery = new BasicDBObject("$or", or);
+
+        FindIterable<Document> appointments = aptCollection.find(orQuery);
+        
+        for (Document d : appointments) {
+            apts.add(new Appointment(
+                    d.getDate("start").toString(),
+                    d.getDate("end").toString(),
+                    doctor,
+                    patient));
+        }
+        return apts;
+    }
+    
+    /**
+     * 
+     * @param doctor
+     * @param patient
+     * @param start
+     * @param end
      * @return exact appointment
      * @throws java.text.ParseException
      */
@@ -548,7 +602,7 @@ public class AppointmentResource {
         
         // check for overlapping appointments
         List<Appointment> apts = lookupAppointment(
-                a.getDoctor(), a.getPatient(), a.getStart(), a.getEnd());
+                a.getDoctor(), a.getPatient(), start, end);
         
         if (apts.size() > 0) {
             return false;

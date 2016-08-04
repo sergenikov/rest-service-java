@@ -99,8 +99,8 @@ public class AppointmentResourceTest extends JerseyTest {
         createAppointment(TESTDOC1, TESTPAT1, 
                 start, end);
         AppointmentResource a = new AppointmentResource();
-        Doctor doctor = new Doctor();
-        Patient patient = new Patient();
+        Doctor doctor = a.lookupDoctor(TESTDOC1);
+        Patient patient = a.lookupPatient(TESTPAT1);
         List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
         assertEquals(2, apts.size());
     }
@@ -113,8 +113,8 @@ public class AppointmentResourceTest extends JerseyTest {
         String start = "2016-08-05T13:00:00Z";
         String end = "2016-08-05T14:10:00Z";
         AppointmentResource a = new AppointmentResource();
-        Doctor doctor = new Doctor();
-        Patient patient = new Patient();
+        Doctor doctor = a.lookupDoctor(TESTDOC1);
+        Patient patient = a.lookupPatient(TESTPAT1);
         List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
         assertEquals(1, apts.size());
     }
@@ -127,8 +127,8 @@ public class AppointmentResourceTest extends JerseyTest {
         String start = "2016-08-05T14:15:00Z";
         String end = "2016-08-05T15:00:00Z";
         AppointmentResource a = new AppointmentResource();
-        Doctor doctor = new Doctor();
-        Patient patient = new Patient();
+        Doctor doctor = a.lookupDoctor(TESTDOC1);
+        Patient patient = a.lookupPatient(TESTPAT1);
         List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
         assertEquals(1, apts.size());
     }
@@ -141,8 +141,8 @@ public class AppointmentResourceTest extends JerseyTest {
         String start = "2016-08-05T14:10:00Z";
         String end = "2016-08-05T14:20:00Z";
         AppointmentResource a = new AppointmentResource();
-        Doctor doctor = new Doctor();
-        Patient patient = new Patient();
+        Doctor doctor = a.lookupDoctor(TESTDOC1);
+        Patient patient = a.lookupPatient(TESTPAT1);
         List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
         assertEquals(1, apts.size());
     }
@@ -153,8 +153,8 @@ public class AppointmentResourceTest extends JerseyTest {
         String start = "2016-08-05T10:10:00Z";
         String end = "2016-08-05T10:20:00Z";
         AppointmentResource a = new AppointmentResource();
-        Doctor doctor = new Doctor();
-        Patient patient = new Patient();
+        Doctor doctor = a.lookupDoctor(TESTDOC1);
+        Patient patient = a.lookupPatient(TESTPAT1);
         List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
         assertEquals(0, apts.size());
     }
@@ -162,16 +162,16 @@ public class AppointmentResourceTest extends JerseyTest {
     // Valid addition, no overlap
     @Test
     public void testAddAppointmentNoOverlap() throws ParseException {
+        AppointmentResource a = new AppointmentResource();
         String start = "2016-08-05T10:10:00Z";
         String end = "2016-08-05T11:10:00Z";
-        Doctor doctor = new Doctor(TESTDOC1);
-        Patient patient = new Patient(TESTPAT1);
+        Doctor doctor = a.lookupDoctor(TESTDOC1);
+        Patient patient = a.lookupPatient(TESTPAT1);
         Appointment apt = new Appointment(start, end, doctor, patient);
                 
         Entity<Appointment> aptEntity = Entity.entity(apt, MediaType.APPLICATION_XML);
         target("appointment/add").request().post(aptEntity);
         
-        AppointmentResource a = new AppointmentResource();
         List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
         assertEquals(1, apts.size());
     }
@@ -181,14 +181,15 @@ public class AppointmentResourceTest extends JerseyTest {
     public void testAddAppointmentOverlap() throws ParseException {
         String start = INIT_DATE_START;
         String end = INIT_DATE_END;
-        Doctor doctor = new Doctor(TESTDOC1);
-        Patient patient = new Patient(TESTPAT1);
+        AppointmentResource a = new AppointmentResource();
+        Doctor doctor = a.lookupDoctor(TESTDOC1);
+        Patient patient = a.lookupPatient(TESTPAT1);
         Appointment apt = new Appointment(start, end, doctor, patient);
                 
         Entity<Appointment> aptEntity = Entity.entity(apt, MediaType.APPLICATION_XML);
         target("appointment/add").request().post(aptEntity);
         
-        AppointmentResource a = new AppointmentResource();
+        
         List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
         assertEquals(1, apts.size());
     }
@@ -201,14 +202,14 @@ public class AppointmentResourceTest extends JerseyTest {
     public void testAddAppointmentOverlapRight() throws ParseException {
         String start = "2016-08-05T13:00:00Z";
         String end = "2016-08-05T14:10:00Z";
-        Doctor doctor = new Doctor(TESTDOC1);
-        Patient patient = new Patient(TESTPAT1);
+        AppointmentResource a = new AppointmentResource();
+        Doctor doctor = a.lookupDoctor(TESTDOC1);
+        Patient patient = a.lookupPatient(TESTPAT1);
         Appointment apt = new Appointment(start, end, doctor, patient);
                 
         Entity<Appointment> aptEntity = Entity.entity(apt, MediaType.APPLICATION_XML);
         target("appointment/add").request().post(aptEntity);
         
-        AppointmentResource a = new AppointmentResource();
         List<Appointment> apts = a.lookupExactAppointment(doctor, patient, start, end);
         assertEquals(0, apts.size());
     }
@@ -221,14 +222,15 @@ public class AppointmentResourceTest extends JerseyTest {
     public void testAddAppointmentOverlapLeft() throws ParseException {
         String start = "2016-08-05T14:15:00Z";
         String end = "2016-08-05T15:00:00Z";
-        Doctor doctor = new Doctor(TESTDOC1);
-        Patient patient = new Patient(TESTPAT1);
+        AppointmentResource a = new AppointmentResource();
+        Doctor doctor = a.lookupDoctor(TESTDOC1);
+        Patient patient = a.lookupPatient(TESTPAT1);
         Appointment apt = new Appointment(start, end, doctor, patient);
                 
         Entity<Appointment> aptEntity = Entity.entity(apt, MediaType.APPLICATION_XML);
         target("appointment/add").request().post(aptEntity);
         
-        AppointmentResource a = new AppointmentResource();
+//        AppointmentResource a = new AppointmentResource();
         List<Appointment> apts = a.lookupExactAppointment(doctor, patient, start, end);
         assertEquals(0, apts.size());
     }
@@ -245,11 +247,11 @@ public class AppointmentResourceTest extends JerseyTest {
      */
 //    @Test
     public void testAddAppointmentOverlapAll() throws ParseException {
-        AppointmentResource a = new AppointmentResource();
         String start = "2016-08-05T14:05:00Z";
         String end   = "2016-08-05T14:20:00Z";
-        Doctor doctor = new Doctor(TESTDOC1);
-        Patient patient = new Patient(TESTPAT1);
+        AppointmentResource a = new AppointmentResource();
+        Doctor doctor = a.lookupDoctor(TESTDOC1);
+        Patient patient = a.lookupPatient(TESTPAT1);
         Appointment apt = new Appointment(start, end, doctor, patient);
         
         List<Appointment> apts1 = a.lookupAppointment(doctor, patient, start, end);
@@ -263,7 +265,7 @@ public class AppointmentResourceTest extends JerseyTest {
         assertEquals(0, apts.size());
     }
     
-    @Test
+//    @Test
     public void testGetFromWaitlist() throws ParseException {
         BasicDBObject searchQuery = new BasicDBObject();
         aptCollection.deleteMany(searchQuery);
@@ -300,15 +302,23 @@ public class AppointmentResourceTest extends JerseyTest {
         Date startDate = dtp.parseDate("2016-08-05T9:00:00Z");
         Date endDate = dtp.parseDate("2016-08-05T9:40:00Z");
         
-        BasicDBObject queryAptToRemove = new BasicDBObject();
-        queryAptToRemove.put("doc_id", ar.lookupDoctor(TESTDOC2).getId());
-        queryAptToRemove.put("pat_id", ar.lookupPatient(TESTPAT2).getId());
-        queryAptToRemove.put("start", startDate);
-        queryAptToRemove.put("end", endDate);
+//        BasicDBObject queryAptToRemove = new BasicDBObject();
+//        queryAptToRemove.put("doc_id", ar.lookupDoctor(TESTDOC2).getId());
+//        queryAptToRemove.put("pat_id", ar.lookupPatient(TESTPAT2).getId());
+//        queryAptToRemove.put("start", startDate);
+//        queryAptToRemove.put("end", endDate);
         
-        DeleteResult dr = aptCollection.deleteOne(queryAptToRemove);
+        Response response = target("appointment/remove")
+                .queryParam("doc_name", TESTDOC2)
+                .queryParam("pat_name", TESTPAT2)
+                .queryParam("start", start)
+                .queryParam("end", end)
+                .request(MediaType.APPLICATION_XML)
+                .method("DELETE");
         
-        assertEquals(1, dr.getDeletedCount());
+//        DeleteResult dr = aptCollection.deleteOne(queryAptToRemove);
+        
+//        assertEquals(1, dr.getDeletedCount());
         assertEquals(1, getNumberOfAppointments());
     }
     

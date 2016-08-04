@@ -342,60 +342,6 @@ public class AppointmentResource {
         return p;
     }
     
-//    /**
-//     * 
-//     * @param doctor
-//     * @param patient
-//     * @param start
-//     * @param end
-//     * @return all overlapping appointments found or null if not found
-//     * @throws java.text.ParseException
-//     */
-//    public List<Appointment> lookupAppointment(Doctor doctor, Patient patient, 
-//            String start, String end) throws ParseException {
-//        
-//        List<Appointment> apts = new ArrayList<>();
-//        
-//        Appointment apt = new Appointment(start, end, doctor, patient);
-//        DatabaseConnection db = DatabaseConnection.getInstance();
-//        MongoCollection<Document> aptCollection = db.mongodb.getCollection("Appointment");
-//        
-//        Date[] dates = parseDates(start, end);
-//    
-//        // find overlapping start and end dates for a given doctor
-//        BasicDBObject query1 = new BasicDBObject();
-//        query1.put("start", new BasicDBObject("$lte", dates[0]));
-//        query1.put("end", new BasicDBObject("$gte", dates[0]));
-//        query1.put("doc_id", doctor.getId());
-//        
-//        BasicDBObject query2 = new BasicDBObject();
-//        query2.put("start", new BasicDBObject("$lte", dates[1]));
-//        query2.put("end", new BasicDBObject("$gte", dates[1]));
-//        query2.put("doc_id", doctor.getId());
-//        
-//        BasicDBObject query3 = new BasicDBObject();
-//        query3.put("start", new BasicDBObject("$lte", dates[0]));
-//        query3.put("end", new BasicDBObject("$gte", dates[1]));
-//        query3.put("doc_id", doctor.getId());
-//        
-//        BasicDBList or = new BasicDBList();
-//        or.add(query1);
-//        or.add(query2);
-//        or.add(query2);
-//        BasicDBObject orQuery = new BasicDBObject("$or", or);
-//
-//        FindIterable<Document> appointments = aptCollection.find(orQuery);
-//        
-//        for (Document d : appointments) {
-//            apts.add(new Appointment(
-//                    d.getDate("start").toString(),
-//                    d.getDate("end").toString(),
-//                    doctor,
-//                    patient));
-//        }
-//        return apts;
-//    }
-    
     /**
      * 
      * @param doctor
@@ -449,43 +395,6 @@ public class AppointmentResource {
         }
         return apts;
     }
-    
-//    /**
-//     * 
-//     * @param doctor
-//     * @param patient
-//     * @param start
-//     * @param end
-//     * @return exact appointment
-//     * @throws java.text.ParseException
-//     */
-//    public List<Appointment> lookupExactAppointment(Doctor doctor, Patient patient, 
-//            String start, String end) throws ParseException {
-//        
-//        List<Appointment> apts = new ArrayList<>();
-//        
-//        Appointment apt = new Appointment(start, end, doctor, patient);
-//        DatabaseConnection db = DatabaseConnection.getInstance();
-//        MongoCollection<Document> aptCollection = db.mongodb.getCollection("Appointment");
-//        
-//        Date[] dates = parseDates(start, end);
-//    
-//        // find overlapping start and end dates for a given doctor
-//        BasicDBObject query1 = new BasicDBObject();
-//        query1.put("start", dates[0]);
-//        query1.put("end", dates[1]);
-//
-//        FindIterable<Document> appointments = aptCollection.find(query1);
-//        
-//        for (Document d : appointments) {
-//            apts.add(new Appointment(
-//                    d.getDate("start").toString(),
-//                    d.getDate("end").toString(),
-//                    doctor,
-//                    patient));
-//        }
-//        return apts;
-//    }
     
     /**
      * 
@@ -615,11 +524,17 @@ public class AppointmentResource {
         List<Appointment> apts = new ArrayList<>();
         for (Document doc : iterable) {
             Document apt = (Document) doc.get("appointment");
+            
+            Doctor tempDoc = new Doctor();
+            tempDoc.setId((String)apt.get("doc_id"));
+            
+            Patient tempPat = new Patient();
+            tempPat.setId((String)apt.get("pat_id"));
             Appointment a = new Appointment(
                     apt.getDate("start").toString(), 
                     apt.getDate("end").toString(),
-                    new Doctor((String)apt.get("doc_id")),
-                    new Patient((String) apt.get("pat_id")));
+                    tempDoc,
+                    tempPat);
             apts.add(a);
         }
         
@@ -633,12 +548,12 @@ public class AppointmentResource {
         MongoCollection<Document> aptCollection = db.mongodb.getCollection("Appointment");
         DateTimeParser dtp = new DateTimeParser();
         
-//        Date startDate = dtp.parseDate(a.getStart());
-//        Date endDate = dtp.parseDate(a.getEnd());
+        Date startDate = dtp.parseDate(a.getStart()); // <<<< failing here
+        Date endDate = dtp.parseDate(a.getEnd());
         
         // check for overlapping appointments
         List<Appointment> apts = lookupAppointment(
-                a.getDoctor(), a.getPatient(), start, end);
+                a.getDoctor(), a.getPatient(), startDate, endDate);
         
         if (apts.size() > 0) {
             return false;
@@ -646,7 +561,7 @@ public class AppointmentResource {
         
         Document newDoc = new Document();
         newDoc.append("doc_id", a.getDoctor().getId());
-        newDoc.append("pat_id", a.getDoctor().getId());
+        newDoc.append("pat_id", a.getPatient().getId());
         newDoc.append("start", start);
         newDoc.append("end", end);
         

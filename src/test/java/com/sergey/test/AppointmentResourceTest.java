@@ -1,6 +1,7 @@
 package com.sergey.test;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.sergey.restclinic.database.DatabaseConnection;
 import com.sergey.restclinic.models.Appointment;
@@ -84,8 +85,8 @@ public class AppointmentResourceTest extends JerseyTest {
         createAppointment(TESTDOC1, TESTPAT1, 
                 start, end);
         AppointmentResource a = new AppointmentResource();
-        Doctor doctor = AppointmentResource.lookupDoctor(TESTDOC1);
-        Patient patient = AppointmentResource.lookupPatient(TESTPAT1);
+        Doctor doctor = a.lookupDoctor(TESTDOC1);
+        Patient patient = a.lookupPatient(TESTPAT1);
         List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
         assertEquals(2, apts.size());
     }
@@ -261,6 +262,38 @@ public class AppointmentResourceTest extends JerseyTest {
         assertEquals(0, apts.size());
     }
     
+    @Test
+    public void testGetFromWaitlist() throws ParseException {
+        BasicDBObject searchQuery = new BasicDBObject();
+        aptCollection.deleteMany(searchQuery);
+        waitlistCollection.deleteMany(searchQuery);
+        
+        String start = "2016-08-05T9:00:00Z";
+        String end = "2016-08-05T9:40:00Z";
+        createAppointmentWithOverlaps(TESTDOC1, TESTPAT1, start, end);
+        
+        // same period, diff pat and doc than above
+        start = "2016-08-05T9:00:00Z";
+        end = "2016-08-05T9:40:00Z";
+        createAppointmentWithOverlaps(TESTDOC2, TESTPAT2, start, end);
+        
+        // overlap: testdoc1
+        start = "2016-08-05T9:10:00Z";
+        end = "2016-08-05T9:30:00Z";
+        createAppointmentWithOverlaps(TESTDOC1, TESTPAT1, start, end);
+        
+        // check waitlist for 1 entry
+        assertEquals(1, getNumberOfWaitlistItems());
+        
+        // overlap: testdoc2
+        start = "2016-08-05T9:10:00Z";
+        end = "2016-08-05T9:30:00Z";
+        createAppointmentWithOverlaps(TESTDOC2, TESTPAT1, start, end);
+        
+        assertEquals(2, getNumberOfWaitlistItems());
+        assertEquals(2, getNumberOfAppointments());
+    }
+    
     //********** HELPERS **********
     
     /**
@@ -301,41 +334,79 @@ public class AppointmentResourceTest extends JerseyTest {
     
     public void createAppointment(String doc, String pat, String start, String end)
             throws ParseException {
+        AppointmentResource ar = new AppointmentResource();
         Appointment a = new Appointment(start, end, 
                 new Doctor(doc), new Patient(pat));
         
         DateTimeParser dtp = new DateTimeParser();
         
-//        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-//        DateFormat format = new SimpleDateFormat(DATE_FORMAT, Locale.ENGLISH);
-//        format.setTimeZone(TimeZone.getTimeZone("UTC"));
-//        Date startDate = null;
-//        Date endDate = null;
-        
         Date startDate = dtp.parseDate(start);
         Date endDate = dtp.parseDate(end);
         
         Document newDoc = new Document();
-        newDoc.append("doc_id", AppointmentResource.lookupDoctor(doc).getId());
-        newDoc.append("pat_id", AppointmentResource.lookupPatient(pat).getId());
+        newDoc.append("doc_id", ar.lookupDoctor(doc).getId());
+        newDoc.append("pat_id", ar.lookupPatient(pat).getId());
         newDoc.append("start", startDate);
         newDoc.append("end", endDate);
         
         aptCollection.insertOne(newDoc);
     }
     
-//     /**
-//     * Helper to get doctors from the db by name
-//     * @param name doctor name
-//     * @return List of Doctor objects
-//     */
-//    public List<Doctor> getAppointments(String start, String end, Doctor doctor) {
-//        
-//        GenericType<List<Appointment>> apts = new GenericType<List<Appointment>>(){};
-//        List<Appointment> responseApts = target("appointments/get")
-//                .queryParam("name", name)
-//                .request(MediaType.APPLICATION_XML)
-//                .get(doctors);
-//        return responseDoctors;
-//    }
+    public void createAppointmentWithOverlaps(String doc, String pat, String start, String end)
+            throws ParseException {
+        AppointmentResource ar = new AppointmentResource();
+        Appointment a = new Appointment(
+                start, end, 
+                new Doctor(doc, ar.lookupDoctor(doc).getId()), 
+                new Patient(pat, ar.lookupPatient(pat).getId()));
+        
+        DateTimeParser dtp = new DateTimeParser();
+        
+        Date startDate = dtp.parseDate(start);
+        Date endDate = dtp.parseDate(end);
+        
+        // check for overlapping appointments
+        List<Appointment> apts = ar.lookupAppointment(
+                a.getDoctor(), a.getPatient(), start, end);
+        
+        if (apts.size() > 0) {
+            // add to waitlist
+            ar.addToWaitlist(startDate, endDate, a.getDoctor().getId(), a.getPatient().getId());
+            return;
+        }
+        
+        Document newDoc = new Document();
+        newDoc.append("doc_id", ar.lookupDoctor(doc).getId());
+        newDoc.append("pat_id", ar.lookupPatient(pat).getId());
+        newDoc.append("start", startDate);
+        newDoc.append("end", endDate);
+        
+        aptCollection.insertOne(newDoc);
+    }
+    
+     /**
+     * Get number of all appointments from the db
+     */
+    public int getNumberOfAppointments() {
+        Document query = new Document();
+        int counter = 0;
+        FindIterable<Document> iterable = aptCollection.find(query);
+        for (Document d : iterable) {
+            counter ++;
+        }
+        return counter;
+    }
+    
+    /**
+     * Get number of all waitlist entries from the db
+     */
+    public int getNumberOfWaitlistItems() {
+        Document query = new Document();
+        int counter = 0;
+        FindIterable<Document> iterable = waitlistCollection.find(query);
+        for (Document d : iterable) {
+            counter ++;
+        }
+        return counter;
+    }
 }

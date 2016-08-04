@@ -254,6 +254,9 @@ public class AppointmentResource {
                     .build();
         }
         
+        // check if there is anything in waitlist
+        List<Appointment> waitlistApts = getFromWaitlist(d.getId(), p.getId(), start, end);
+        
         if (deleteResult.getDeletedCount() == 0) {
             return Response.status(400).entity("Failed to remove.").build();
         }
@@ -268,7 +271,7 @@ public class AppointmentResource {
      * When iterating over doctors found assumes there is only one doctor
      * with that name - return first document found.
      */
-    static public Doctor lookupDoctor(String name) {
+    public Doctor lookupDoctor(String name) {
         DatabaseConnection db = DatabaseConnection.getInstance();
         MongoCollection<Document> docCollection = db.mongodb.getCollection("Doctor");
         
@@ -300,7 +303,7 @@ public class AppointmentResource {
      * with that name - return first document found.
      * TODO In reality phone number or some unique id will be used.
      */
-    static public Patient lookupPatient(String name) {
+    public Patient lookupPatient(String name) {
         DatabaseConnection db = DatabaseConnection.getInstance();
         MongoCollection<Document> docCollection = db.mongodb.getCollection("Patient");
         
@@ -348,14 +351,17 @@ public class AppointmentResource {
         BasicDBObject query1 = new BasicDBObject();
         query1.put("start", new BasicDBObject("$lte", dates[0]));
         query1.put("end", new BasicDBObject("$gte", dates[0]));
+        query1.put("doc_id", doctor.getId());
         
         BasicDBObject query2 = new BasicDBObject();
         query2.put("start", new BasicDBObject("$lte", dates[1]));
         query2.put("end", new BasicDBObject("$gte", dates[1]));
+        query2.put("doc_id", doctor.getId());
         
         BasicDBObject query3 = new BasicDBObject();
         query3.put("start", new BasicDBObject("$lte", dates[0]));
         query3.put("end", new BasicDBObject("$gte", dates[1]));
+        query3.put("doc_id", doctor.getId());
         
         BasicDBList or = new BasicDBList();
         or.add(query1);
@@ -453,17 +459,17 @@ public class AppointmentResource {
     
     /**
      * Add appointment to waitlist
+     *
      * @param start
      * @param end
      * @param did
      * @param pid
      * @return Response
      */
-    public 
-        Response addToWaitlist(Date start, Date end, String did, String pid) {
+    public Response addToWaitlist(Date start, Date end, String did, String pid) {
         DatabaseConnection db = DatabaseConnection.getInstance();
         MongoCollection<Document> waitlistCollection = db.mongodb.getCollection("Waitlist");
-        
+
         Document waitlistEntry = new Document();
         Document aptEntry = new Document();
         aptEntry.append("doc_id", did);
@@ -471,15 +477,47 @@ public class AppointmentResource {
         aptEntry.append("start", start);
         aptEntry.append("end", end);
         waitlistEntry.append("appointment", aptEntry);
-        
+
         try {
             waitlistCollection.insertOne(waitlistEntry);
         } catch (MongoException e) {
             return Response.status(500)
                     .entity("Failed to creat appointment").build();
         }
-        
+
         return Response.status(400)
-                    .entity("Appointment overlap. Added to waitlist").build();
+                .entity("Appointment overlap. Added to waitlist").build();
+    }
+
+    /**
+     *
+     * @param did
+     * @param pid used to find and remove the waitlist entry
+     * @param start
+     * @param end
+     * @return Appointment pulled from the Waitlist or null
+     */
+    public List<Appointment> getFromWaitlist(String did, String pid, Date start, Date end) {
+        DatabaseConnection db = DatabaseConnection.getInstance();
+        MongoCollection<Document> waitlistCollection = db.mongodb.getCollection("Waitlist");
+//        MongoCollection<Document> aptCollection = db.mongodb.getCollection("Appointment");
+        
+        // find all waitlist entries for this doctor
+        Document query = new Document();
+        query.append("appointment.doc_id", did);
+        FindIterable<Document> iterable = waitlistCollection.find(query);
+        
+        List<Appointment> apts = new ArrayList<>();
+        for (Document doc : iterable) {
+            DBObject apt = (BasicDBObject) doc.get("appointment");
+            Appointment a = new Appointment(
+                    (String) apt.get("start"), 
+                    (String) apt.get("end"),
+                    new Doctor((String)apt.get("doc_id")),
+                    new Patient((String) apt.get("pat_id")));
+            apts.add(a);
+        }
+        
+        return apts;
     }
 }

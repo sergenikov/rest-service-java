@@ -188,6 +188,70 @@ public class AppointmentResourceTest extends JerseyTest {
         assertEquals(1, apts.size());
     }
     
+    // Valid addition, guaranteed overlap
+    // Start before INIT start time and end after INIT start time
+    //      ------------- init
+    // -------- new
+    @Test
+    public void testAddAppointmentOverlapRight() throws ParseException {
+        String start = "2016-08-05T13:00:00Z";
+        String end = "2016-08-05T14:10:00Z";
+        Doctor doctor = new Doctor(TESTDOC1);
+        Patient patient = new Patient(TESTPAT1);
+        Appointment apt = new Appointment(start, end, doctor, patient);
+                
+        Entity<Appointment> aptEntity = Entity.entity(apt, MediaType.APPLICATION_XML);
+        target("appointment/add").request().post(aptEntity);
+        
+        AppointmentResource a = new AppointmentResource();
+        List<Appointment> apts = a.lookupExactAppointment(doctor, patient, start, end);
+        assertEquals(0, apts.size());
+    }
+    
+    // Valid addition, guaranteed overlap
+    // ------------- init
+    //           -------- new
+    // Start after INIT start time and end after INIT end time.
+    @Test
+    public void testAddAppointmentOverlapLeft() throws ParseException {
+        String start = "2016-08-05T14:15:00Z";
+        String end = "2016-08-05T15:00:00Z";
+        Doctor doctor = new Doctor(TESTDOC1);
+        Patient patient = new Patient(TESTPAT1);
+        Appointment apt = new Appointment(start, end, doctor, patient);
+                
+        Entity<Appointment> aptEntity = Entity.entity(apt, MediaType.APPLICATION_XML);
+        target("appointment/add").request().post(aptEntity);
+        
+        AppointmentResource a = new AppointmentResource();
+        List<Appointment> apts = a.lookupExactAppointment(doctor, patient, start, end);
+        assertEquals(0, apts.size());
+    }
+    
+    // Start after INIT start and end before INIT end time
+    //      ------------- init
+    //         -------- new
+    // Start after INIT start time and end after INIT end time.
+    @Test
+    public void testAddAppointmentOverlapAll() throws ParseException {
+        AppointmentResource a = new AppointmentResource();
+        String start = "2016-08-05T14:10:00Z";
+        String end = "2016-08-05T14:20:00Z";
+        Doctor doctor = new Doctor(TESTDOC1);
+        Patient patient = new Patient(TESTPAT1);
+        Appointment apt = new Appointment(start, end, doctor, patient);
+        
+        List<Appointment> apts1 = a.lookupAppointment(doctor, patient, start, end);
+        assertEquals(0, apts1.size());
+                
+        Entity<Appointment> aptEntity = Entity.entity(apt, MediaType.APPLICATION_XML);
+        target("appointment/add").request().post(aptEntity);
+        
+        
+        List<Appointment> apts = a.lookupExactAppointment(doctor, patient, start, end);
+        assertEquals(0, apts.size());
+    }
+    
     //********** HELPERS **********
     
     /**
@@ -231,10 +295,12 @@ public class AppointmentResourceTest extends JerseyTest {
         Appointment a = new Appointment(start, end, 
                 new Doctor(doc), new Patient(pat));
         
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         DateFormat format = new SimpleDateFormat(DATE_FORMAT, Locale.ENGLISH);
+        format.setTimeZone(TimeZone.getTimeZone("UTC"));
         Date startDate = null;
         Date endDate = null;
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        
         startDate = format.parse(start);
         endDate = format.parse(end);
         

@@ -89,7 +89,9 @@ public class AppointmentResourceTest extends JerseyTest {
         AppointmentResource a = new AppointmentResource();
         Doctor doctor = a.lookupDoctor(TESTDOC1);
         Patient patient = a.lookupPatient(TESTPAT1);
-        List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
+        DateTimeParser dtp = new DateTimeParser();
+        List<Appointment> apts = a.lookupAppointment(doctor, patient, 
+                dtp.parseDate(start), dtp.parseDate(end));
         assertEquals(2, apts.size());
     }
     
@@ -102,7 +104,9 @@ public class AppointmentResourceTest extends JerseyTest {
         AppointmentResource a = new AppointmentResource();
         Doctor doctor = a.lookupDoctor(TESTDOC1);
         Patient patient = a.lookupPatient(TESTPAT1);
-        List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
+        DateTimeParser dtp = new DateTimeParser();
+        List<Appointment> apts = a.lookupAppointment(doctor, patient, 
+                dtp.parseDate(start), dtp.parseDate(end));
         assertEquals(2, apts.size());
     }
     
@@ -116,7 +120,9 @@ public class AppointmentResourceTest extends JerseyTest {
         AppointmentResource a = new AppointmentResource();
         Doctor doctor = a.lookupDoctor(TESTDOC1);
         Patient patient = a.lookupPatient(TESTPAT1);
-        List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
+        DateTimeParser dtp = new DateTimeParser();
+        List<Appointment> apts = a.lookupAppointment(doctor, patient, 
+                dtp.parseDate(start), dtp.parseDate(end));
         assertEquals(1, apts.size());
     }
     
@@ -130,7 +136,9 @@ public class AppointmentResourceTest extends JerseyTest {
         AppointmentResource a = new AppointmentResource();
         Doctor doctor = a.lookupDoctor(TESTDOC1);
         Patient patient = a.lookupPatient(TESTPAT1);
-        List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
+        DateTimeParser dtp = new DateTimeParser();
+        List<Appointment> apts = a.lookupAppointment(doctor, patient, 
+                dtp.parseDate(start), dtp.parseDate(end));
         assertEquals(1, apts.size());
     }
     
@@ -144,7 +152,9 @@ public class AppointmentResourceTest extends JerseyTest {
         AppointmentResource a = new AppointmentResource();
         Doctor doctor = a.lookupDoctor(TESTDOC1);
         Patient patient = a.lookupPatient(TESTPAT1);
-        List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
+        DateTimeParser dtp = new DateTimeParser();
+        List<Appointment> apts = a.lookupAppointment(doctor, patient, 
+                dtp.parseDate(start), dtp.parseDate(end));
         assertEquals(1, apts.size());
     }
     
@@ -156,7 +166,9 @@ public class AppointmentResourceTest extends JerseyTest {
         AppointmentResource a = new AppointmentResource();
         Doctor doctor = a.lookupDoctor(TESTDOC1);
         Patient patient = a.lookupPatient(TESTPAT1);
-        List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
+        DateTimeParser dtp = new DateTimeParser();
+        List<Appointment> apts = a.lookupAppointment(doctor, patient, 
+                dtp.parseDate(start), dtp.parseDate(end));
         assertEquals(0, apts.size());
     }
     
@@ -173,7 +185,9 @@ public class AppointmentResourceTest extends JerseyTest {
         Entity<Appointment> aptEntity = Entity.entity(apt, MediaType.APPLICATION_XML);
         target("appointment/add").request().post(aptEntity);
         
-        List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
+        DateTimeParser dtp = new DateTimeParser();
+        List<Appointment> apts = a.lookupAppointment(doctor, patient, 
+                dtp.parseDate(start), dtp.parseDate(end));
         assertEquals(1, apts.size());
     }
     
@@ -191,7 +205,9 @@ public class AppointmentResourceTest extends JerseyTest {
         target("appointment/add").request().post(aptEntity);
         
         
-        List<Appointment> apts = a.lookupAppointment(doctor, patient, start, end);
+        DateTimeParser dtp = new DateTimeParser();
+        List<Appointment> apts = a.lookupAppointment(doctor, patient, 
+                dtp.parseDate(start), dtp.parseDate(end));
         assertEquals(1, apts.size());
     }
     
@@ -211,7 +227,9 @@ public class AppointmentResourceTest extends JerseyTest {
         Entity<Appointment> aptEntity = Entity.entity(apt, MediaType.APPLICATION_XML);
         target("appointment/add").request().post(aptEntity);
         
-        List<Appointment> apts = a.lookupExactAppointment(doctor, patient, start, end);
+        DateTimeParser dtp = new DateTimeParser();
+        List<Appointment> apts = a.lookupExactAppointment(doctor, patient, 
+                dtp.parseDate(start), dtp.parseDate(end));
         assertEquals(0, apts.size());
     }
     
@@ -232,7 +250,9 @@ public class AppointmentResourceTest extends JerseyTest {
         target("appointment/add").request().post(aptEntity);
         
 //        AppointmentResource a = new AppointmentResource();
-        List<Appointment> apts = a.lookupExactAppointment(doctor, patient, start, end);
+        DateTimeParser dtp = new DateTimeParser();
+        List<Appointment> apts = a.lookupExactAppointment(doctor, patient, 
+                dtp.parseDate(start), dtp.parseDate(end));
         assertEquals(0, apts.size());
     }
     
@@ -255,14 +275,17 @@ public class AppointmentResourceTest extends JerseyTest {
         Patient patient = a.lookupPatient(TESTPAT1);
         Appointment apt = new Appointment(start, end, doctor, patient);
         
-        List<Appointment> apts1 = a.lookupAppointment(doctor, patient, start, end);
+        DateTimeParser dtp = new DateTimeParser();
+        List<Appointment> apts1 = a.lookupExactAppointment(doctor, patient, 
+                dtp.parseDate(start), dtp.parseDate(end));
         assertEquals(1, apts1.size());
                 
         Entity<Appointment> aptEntity = Entity.entity(apt, MediaType.APPLICATION_XML);
         target("appointment/add").request().post(aptEntity);
         
         
-        List<Appointment> apts = a.lookupExactAppointment(doctor, patient, start, end);
+        List<Appointment> apts = a.lookupExactAppointment(doctor, patient, 
+                dtp.parseDate(start), dtp.parseDate(end));
         assertEquals(0, apts.size());
     }
     
@@ -397,7 +420,7 @@ public class AppointmentResourceTest extends JerseyTest {
         
         // check for overlapping appointments
         List<Appointment> apts = ar.lookupAppointment(
-                a.getDoctor(), a.getPatient(), start, end);
+                a.getDoctor(), a.getPatient(), startDate, endDate);
         
         if (apts.size() > 0) {
             // add to waitlist

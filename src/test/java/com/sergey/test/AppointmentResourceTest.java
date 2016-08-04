@@ -52,6 +52,7 @@ public class AppointmentResourceTest extends JerseyTest {
     MongoCollection<Document> docCollection = db.mongodb.getCollection("Doctor");
     MongoCollection<Document> patCollection = db.mongodb.getCollection("Patient");
     MongoCollection<Document> aptCollection = db.mongodb.getCollection("Appointment");
+    MongoCollection<Document> waitlistCollection = db.mongodb.getCollection("Waitlist");
     
     @Override
     protected Application configure() {
@@ -72,6 +73,7 @@ public class AppointmentResourceTest extends JerseyTest {
         docCollection.deleteMany(searchQuery);
         patCollection.deleteMany(searchQuery);
         aptCollection.deleteMany(searchQuery);
+        waitlistCollection.deleteMany(searchQuery);
     }
     
     // Create sample appointment and the find it

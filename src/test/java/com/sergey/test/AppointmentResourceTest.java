@@ -3,6 +3,7 @@ package com.sergey.test;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.result.DeleteResult;
 import com.sergey.restclinic.database.DatabaseConnection;
 import com.sergey.restclinic.models.Appointment;
 import com.sergey.restclinic.models.Doctor;
@@ -267,6 +268,7 @@ public class AppointmentResourceTest extends JerseyTest {
         BasicDBObject searchQuery = new BasicDBObject();
         aptCollection.deleteMany(searchQuery);
         waitlistCollection.deleteMany(searchQuery);
+        AppointmentResource ar = new AppointmentResource();
         
         String start = "2016-08-05T9:00:00Z";
         String end = "2016-08-05T9:40:00Z";
@@ -292,6 +294,22 @@ public class AppointmentResourceTest extends JerseyTest {
         
         assertEquals(2, getNumberOfWaitlistItems());
         assertEquals(2, getNumberOfAppointments());
+        
+        // remove one appointment
+        DateTimeParser dtp = new DateTimeParser();
+        Date startDate = dtp.parseDate("2016-08-05T9:00:00Z");
+        Date endDate = dtp.parseDate("2016-08-05T9:40:00Z");
+        
+        BasicDBObject queryAptToRemove = new BasicDBObject();
+        queryAptToRemove.put("doc_id", ar.lookupDoctor(TESTDOC2).getId());
+        queryAptToRemove.put("pat_id", ar.lookupPatient(TESTPAT2).getId());
+        queryAptToRemove.put("start", startDate);
+        queryAptToRemove.put("end", endDate);
+        
+        DeleteResult dr = aptCollection.deleteOne(queryAptToRemove);
+        
+        assertEquals(1, dr.getDeletedCount());
+        assertEquals(1, getNumberOfAppointments());
     }
     
     //********** HELPERS **********

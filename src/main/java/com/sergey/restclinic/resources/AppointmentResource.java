@@ -12,6 +12,7 @@ import com.sergey.restclinic.database.DatabaseConnection;
 import com.sergey.restclinic.models.Appointment;
 import com.sergey.restclinic.models.Doctor;
 import com.sergey.restclinic.models.Patient;
+import com.sergey.restclinic.utils.DateTimeParser;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -68,18 +69,28 @@ public class AppointmentResource {
             documentNotFoundError(param_pat_name);
         }
         
-        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
+//        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
         // get date from request
+//        Date start;
+//        Date end;
+//        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+//        try {
+//            start = format.parse(param_start);
+//            end = format.parse(param_end);
+//        } catch (ParseException ex) {
+//            // TODO needs some error handling for server not to freak out
+//            Logger.getLogger(AppointmentResource.class.getName()).log(Level.SEVERE, null, ex);
+//            System.out.println("in date error");
+//            return null;
+//        }
+
         Date start;
         Date end;
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        DateTimeParser dtp = new DateTimeParser();
         try {
-            start = format.parse(param_start);
-            end = format.parse(param_end);
+            start = dtp.parseDate(param_start);
+            end = dtp.parseDate(param_end);
         } catch (ParseException ex) {
-            // TODO needs some error handling for server not to freak out
-            Logger.getLogger(AppointmentResource.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("in date error");
             return null;
         }
         
@@ -124,7 +135,7 @@ public class AppointmentResource {
         MongoCollection<Document> waitlistCollection = db.mongodb.getCollection("Waitlist");
         
         // Get dates
-        DateFormat format = new SimpleDateFormat(DATE_FORMAT, Locale.ENGLISH);
+//        DateFormat format = new SimpleDateFormat(DATE_FORMAT, Locale.ENGLISH);
 
         
         System.out.println("AppointmentResource.createAppointment(): " 
@@ -150,15 +161,30 @@ public class AppointmentResource {
                     .build();
         }
         
+//        // get date from request
+//        // and do overlap lookup and check here
+//        Date start = null;
+//        Date end = null;
+//        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+//        try {
+//            start = format.parse(apt.getStart());
+//            end = format.parse(apt.getEnd());
+//            apts = lookupAppointment(doctor, patient, apt.getStart(), apt.getEnd());
+//        } catch (ParseException ex) {
+//            // TODO needs some error handling for server not to freak out
+//            Logger.getLogger(AppointmentResource.class.getName()).log(Level.SEVERE, null, ex);
+//            return Response.status(500)
+//                    .entity("Appointment creating failed. Error " + ex)
+//                    .build();
+//        }
+        
         List<Appointment> apts;
-        // get date from request
-        // and do overlap lookup and check here
-        Date start = null;
-        Date end = null;
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        DateTimeParser dtp = new DateTimeParser();
+        Date start;
+        Date end;
         try {
-            start = format.parse(apt.getStart());
-            end = format.parse(apt.getEnd());
+            start = dtp.parseDate(apt.getStart());
+            end = dtp.parseDate(apt.getEnd());
             apts = lookupAppointment(doctor, patient, apt.getStart(), apt.getEnd());
         } catch (ParseException ex) {
             // TODO needs some error handling for server not to freak out
@@ -442,11 +468,10 @@ public class AppointmentResource {
      * @throws java.text.ParseException
      */
     public Date[] parseDates(String startDate, String endDate) throws ParseException {
-        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        DateTimeParser dtp = new DateTimeParser();
         Date[] dates = new Date[2];
-        dates[0] = format.parse(startDate);
-        dates[1] = format.parse(endDate);
+        dates[0] = dtp.parseDate(startDate);
+        dates[1] = dtp.parseDate(endDate);
         return dates;
     }
     
@@ -457,8 +482,7 @@ public class AppointmentResource {
      * @throws java.text.ParseException
      */
     public Date parseDate(String date) throws ParseException {
-        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        return format.parse(date);
+        DateTimeParser dtp = new DateTimeParser();
+        return dtp.parseDate(date);
     }
 }

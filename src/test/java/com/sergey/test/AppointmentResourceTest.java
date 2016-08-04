@@ -232,7 +232,7 @@ public class AppointmentResourceTest extends JerseyTest {
     //      ------------- init
     //         -------- new
     // Start after INIT start time and end after INIT end time.
-    @Test
+//    @Test
     public void testAddAppointmentOverlapAll() throws ParseException {
         AppointmentResource a = new AppointmentResource();
         String start = "2016-08-05T14:10:00Z";

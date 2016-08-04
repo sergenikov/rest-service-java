@@ -268,6 +268,12 @@ public class AppointmentResource {
             }
             if (result == true) {
                 // remove from waitlist
+                try {
+                    removeFromWaitlist(a);
+                } catch (ParseException e) {
+                System.out.println("Parse exception " + e);
+                break;
+            } 
                 break;
             }
         }
@@ -575,5 +581,25 @@ public class AppointmentResource {
         
         aptCollection.insertOne(newDoc);
         return true;
+    }
+
+    /**
+     * Remove appointment from the waitlist
+     * @param a
+     * @return 
+     */
+    private DeleteResult removeFromWaitlist(Appointment a) throws ParseException {
+        DatabaseConnection db = DatabaseConnection.getInstance();
+        MongoCollection<Document> waitlistCollection = db.mongodb.getCollection("Waitlist");
+        Document query = new Document();
+        DateTimeParser dtp = new DateTimeParser();
+        
+        query.append("appointment.doc_id", a.getDoctor().getId());
+        query.append("appointment.pat_id", a.getPatient().getId());
+        query.append("appointment.start", dtp.parseDate(a.getStart()));
+        query.append("appointment.end", dtp.parseDate(a.getEnd()));
+        
+       
+        return waitlistCollection.deleteOne(query);
     }
 }

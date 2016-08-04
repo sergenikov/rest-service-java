@@ -453,8 +453,14 @@ public class AppointmentResource {
     
     /**
      * Add appointment to waitlist
+     * @param start
+     * @param end
+     * @param did
+     * @param pid
+     * @return Response
      */
-    public Response addToWaitlist(Date start, Date end, String did, String pid) {
+    public 
+        Response addToWaitlist(Date start, Date end, String did, String pid) {
         DatabaseConnection db = DatabaseConnection.getInstance();
         MongoCollection<Document> waitlistCollection = db.mongodb.getCollection("Waitlist");
         

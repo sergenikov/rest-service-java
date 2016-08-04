@@ -347,6 +347,59 @@ public class AppointmentResourceTest extends JerseyTest {
         assertEquals(2, getNumberOfAppointments());
     }
     
+    @Test
+    public void testGetFromWaitlist2() throws ParseException {
+        BasicDBObject searchQuery = new BasicDBObject();
+        aptCollection.deleteMany(searchQuery);
+        waitlistCollection.deleteMany(searchQuery);
+        AppointmentResource ar = new AppointmentResource();
+
+        String start = "2016-08-05T9:00:00Z";
+        String end = "2016-08-05T9:40:00Z";
+        createAppointmentWithOverlaps(TESTDOC1, TESTPAT1, start, end);
+
+        // same period, diff pat and doc than above
+        start = "2016-08-05T9:00:00Z";
+        end = "2016-08-05T9:40:00Z";
+        createAppointmentWithOverlaps(TESTDOC2, TESTPAT2, start, end);
+
+        // no overlap: testdoc1
+        start = "2016-08-05T19:10:00Z";
+        end = "2016-08-05T19:30:00Z";
+        createAppointmentWithOverlaps(TESTDOC1, TESTPAT1, start, end);
+
+        // check waitlist for 1 entry
+        assertEquals(0, getNumberOfWaitlistItems());
+
+        // no overlap with anything
+        start = "2016-08-05T12:10:00Z";
+        end = "2016-08-05T12:30:00Z";
+        createAppointmentWithOverlaps(TESTDOC2, TESTPAT1, start, end);
+
+        assertEquals(0, getNumberOfWaitlistItems());
+        assertEquals(4, getNumberOfAppointments());
+
+        // remove one appointment
+        DateTimeParser dtp = new DateTimeParser();
+        Date startDate = dtp.parseDate("2016-08-05T9:00:00Z");
+        Date endDate = dtp.parseDate("2016-08-05T9:40:00Z");
+        
+        BasicDBObject queryAptToRemove = new BasicDBObject();
+        queryAptToRemove.put("doc_id", ar.lookupDoctor(TESTDOC2).getId());
+        queryAptToRemove.put("pat_id", ar.lookupPatient(TESTPAT2).getId());
+        queryAptToRemove.put("start", startDate);
+        queryAptToRemove.put("end", endDate);
+        
+        DeleteResult dr = removeAppointment(queryAptToRemove, 
+                ar.lookupDoctor(TESTDOC2).getId(),
+                ar.lookupPatient(TESTPAT2).getId(),
+                startDate, endDate);
+        
+        // See snippet at the end in case need to call target
+        assertEquals(1, dr.getDeletedCount());
+        assertEquals(3, getNumberOfAppointments());
+    }
+    
     //********** HELPERS **********
     
     /**

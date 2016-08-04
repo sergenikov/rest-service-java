@@ -509,10 +509,10 @@ public class AppointmentResource {
         
         List<Appointment> apts = new ArrayList<>();
         for (Document doc : iterable) {
-            DBObject apt = (BasicDBObject) doc.get("appointment");
+            Document apt = (Document) doc.get("appointment");
             Appointment a = new Appointment(
-                    (String) apt.get("start"), 
-                    (String) apt.get("end"),
+                    apt.getDate("start").toString(), 
+                    apt.getDate("end").toString(),
                     new Doctor((String)apt.get("doc_id")),
                     new Patient((String) apt.get("pat_id")));
             apts.add(a);

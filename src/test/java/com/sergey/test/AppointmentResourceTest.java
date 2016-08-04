@@ -22,6 +22,7 @@ import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -265,60 +266,61 @@ public class AppointmentResourceTest extends JerseyTest {
         assertEquals(0, apts.size());
     }
     
-//    @Test
+    @Test
     public void testGetFromWaitlist() throws ParseException {
         BasicDBObject searchQuery = new BasicDBObject();
         aptCollection.deleteMany(searchQuery);
         waitlistCollection.deleteMany(searchQuery);
         AppointmentResource ar = new AppointmentResource();
-        
+
         String start = "2016-08-05T9:00:00Z";
         String end = "2016-08-05T9:40:00Z";
         createAppointmentWithOverlaps(TESTDOC1, TESTPAT1, start, end);
-        
+
         // same period, diff pat and doc than above
         start = "2016-08-05T9:00:00Z";
         end = "2016-08-05T9:40:00Z";
         createAppointmentWithOverlaps(TESTDOC2, TESTPAT2, start, end);
-        
+
         // overlap: testdoc1
         start = "2016-08-05T9:10:00Z";
         end = "2016-08-05T9:30:00Z";
         createAppointmentWithOverlaps(TESTDOC1, TESTPAT1, start, end);
-        
+
         // check waitlist for 1 entry
         assertEquals(1, getNumberOfWaitlistItems());
-        
+
         // overlap: testdoc2
         start = "2016-08-05T9:10:00Z";
         end = "2016-08-05T9:30:00Z";
         createAppointmentWithOverlaps(TESTDOC2, TESTPAT1, start, end);
-        
+
         assertEquals(2, getNumberOfWaitlistItems());
         assertEquals(2, getNumberOfAppointments());
+
+        // remove one appointment that had overlap
+        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+
+//        DateTimeParser dtp = new DateTimeParser();
+//        Date startDate = dtp.parseDate("2016-08-05T9:00:00Z");
+//        Date endDate = dtp.parseDate("2016-08-05T9:40:00Z");
+        Date startDate = format.parse("2016-08-05T9:00:00Z");
+        Date endDate = format.parse("2016-08-05T9:40:00Z");
         
-        // remove one appointment
-        DateTimeParser dtp = new DateTimeParser();
-        Date startDate = dtp.parseDate("2016-08-05T9:00:00Z");
-        Date endDate = dtp.parseDate("2016-08-05T9:40:00Z");
+        BasicDBObject queryAptToRemove = new BasicDBObject();
+        queryAptToRemove.put("doc_id", ar.lookupDoctor(TESTDOC2).getId());
+        queryAptToRemove.put("pat_id", ar.lookupPatient(TESTPAT2).getId());
+        queryAptToRemove.put("start", startDate);
+        queryAptToRemove.put("end", endDate);
         
-//        BasicDBObject queryAptToRemove = new BasicDBObject();
-//        queryAptToRemove.put("doc_id", ar.lookupDoctor(TESTDOC2).getId());
-//        queryAptToRemove.put("pat_id", ar.lookupPatient(TESTPAT2).getId());
-//        queryAptToRemove.put("start", startDate);
-//        queryAptToRemove.put("end", endDate);
+        DeleteResult dr = removeAppointment(queryAptToRemove, 
+                ar.lookupDoctor(TESTDOC2).getId(),
+                ar.lookupPatient(TESTPAT2).getId(),
+                startDate, endDate);
         
-        Response response = target("appointment/remove")
-                .queryParam("doc_name", TESTDOC2)
-                .queryParam("pat_name", TESTPAT2)
-                .queryParam("start", start)
-                .queryParam("end", end)
-                .request(MediaType.APPLICATION_XML)
-                .method("DELETE");
-        
-//        DeleteResult dr = aptCollection.deleteOne(queryAptToRemove);
-        
-//        assertEquals(1, dr.getDeletedCount());
+        // See snippet at the end in case need to call target
+        assertEquals(1, dr.getDeletedCount());
         assertEquals(1, getNumberOfAppointments());
     }
     
@@ -437,4 +439,37 @@ public class AppointmentResourceTest extends JerseyTest {
         }
         return counter;
     }
+
+    private DeleteResult removeAppointment(
+            BasicDBObject queryAptToRemove,
+            String did, String pid, Date start, Date end) {
+        AppointmentResource ar = new AppointmentResource();
+        DeleteResult dr = aptCollection.deleteOne(queryAptToRemove);
+        List<Appointment> waitlistApts = ar.getFromWaitlist(did, pid, start, end);
+        return dr;
+    }
 }
+
+
+        
+// invocation builder changes date format and its different on server end
+//        Invocation.Builder ib = target("appointment/remove")
+//                .queryParam("doc_name", TESTDOC2)
+//                .queryParam("pat_name", TESTPAT2)
+//                .queryParam("start", startDate)
+//                .queryParam("end", endDate)
+//                .request(MediaType.APPLICATION_XML);
+
+//        Response response = target("appointment/remove")
+//                .queryParam("doc_name", TESTDOC2)
+//                .queryParam("pat_name", TESTPAT2)
+//                .queryParam("start", startDate)
+//                .queryParam("end", endDate)
+//                .request(MediaType.APPLICATION_XML)
+//                .method("DELETE");
+//        Response response = ib.method("DELETE");
+
+//        
+//        assertEquals(1, dr.getDeletedCount());
+//        int st = response.getStatus();
+//        assertEquals(response.getStatus(), 200);

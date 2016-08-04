@@ -253,18 +253,28 @@ public class AppointmentResource {
             documentNotFoundError(param_pat_name);
         }
         
-        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
-        // get date from request
-        Date start = null;
-        Date end = null;
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+//        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
+//        // get date from request
+//        Date start = null;
+//        Date end = null;
+//        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+//        try {
+//            start = format.parse(param_start);
+//            end = format.parse(param_end);
+//        } catch (ParseException ex) {
+//            // TODO needs some error handling for server not to freak out
+//            Logger.getLogger(AppointmentResource.class.getName()).log(Level.SEVERE, null, ex);
+//            System.out.println("in date error");
+//            return null;
+//        }
+        
+        Date start;
+        Date end;
+        DateTimeParser dtp = new DateTimeParser();
         try {
-            start = format.parse(param_start);
-            end = format.parse(param_end);
+            start = dtp.parseDate(param_start);
+            end = dtp.parseDate(param_end);
         } catch (ParseException ex) {
-            // TODO needs some error handling for server not to freak out
-            Logger.getLogger(AppointmentResource.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("in date error");
             return null;
         }
         

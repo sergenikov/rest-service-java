@@ -102,7 +102,7 @@ POST `/restclinic/webapi/appointment/add`
 </appointment>
 ```
 
-POST `/restclinic/webapi/appointment/add`
+POST `/restclinic/webapi/appointment/add`  
 Overlapping appointment with the one above.
 ```
 <appointment>
@@ -117,8 +117,8 @@ Overlapping appointment with the one above.
 </appointment>
 ```
 
-DELETE `/restclinic/webapi/appointment/remove?doc_name=david&pat_name=chris&start=2016-08-05T10:00:00Z&end=2016-08-05T11:00:00Z`
+DELETE `/restclinic/webapi/appointment/remove?doc_name=david&pat_name=chris&start=2016-08-05T10:00:00Z&end=2016-08-05T11:00:00Z`  
 Delete first appointment, which will pull waitlisted appointment from the db.
 
-Do a get to verify that it's there now in the Appointment table.
+Do a get to verify that it's there now in the Appointment table.  
 GET `/restclinic/webapi/appointment/get?doc_name=david&pat_name=chris&start=2016-08-05T09:00:00Z&end=2016-08-05T11:00:00Z`

@@ -576,8 +576,8 @@ public class AppointmentResource {
         Document newDoc = new Document();
         newDoc.append("doc_id", a.getDoctor().getId());
         newDoc.append("pat_id", a.getPatient().getId());
-        newDoc.append("start", a.getStart());
-        newDoc.append("end", a.getEnd());
+        newDoc.append("start", startDate);
+        newDoc.append("end", endDate);
         
         aptCollection.insertOne(newDoc);
         return true;

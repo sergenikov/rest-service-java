@@ -299,14 +299,14 @@ public class AppointmentResourceTest extends JerseyTest {
         assertEquals(2, getNumberOfAppointments());
 
         // remove one appointment that had overlap
-        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+//        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
+//        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
-//        DateTimeParser dtp = new DateTimeParser();
-//        Date startDate = dtp.parseDate("2016-08-05T9:00:00Z");
-//        Date endDate = dtp.parseDate("2016-08-05T9:40:00Z");
-        Date startDate = format.parse("2016-08-05T9:00:00Z");
-        Date endDate = format.parse("2016-08-05T9:40:00Z");
+        DateTimeParser dtp = new DateTimeParser();
+        Date startDate = dtp.parseDate("2016-08-05T9:00:00Z");
+        Date endDate = dtp.parseDate("2016-08-05T9:40:00Z");
+//        Date startDate = format.parse("2016-08-05T9:00:00Z");
+//        Date endDate = format.parse("2016-08-05T9:40:00Z");
         
         BasicDBObject queryAptToRemove = new BasicDBObject();
         queryAptToRemove.put("doc_id", ar.lookupDoctor(TESTDOC2).getId());
@@ -321,7 +321,7 @@ public class AppointmentResourceTest extends JerseyTest {
         
         // See snippet at the end in case need to call target
         assertEquals(1, dr.getDeletedCount());
-        assertEquals(1, getNumberOfAppointments());
+        assertEquals(2, getNumberOfAppointments());
     }
     
     //********** HELPERS **********
@@ -446,6 +446,22 @@ public class AppointmentResourceTest extends JerseyTest {
         AppointmentResource ar = new AppointmentResource();
         DeleteResult dr = aptCollection.deleteOne(queryAptToRemove);
         List<Appointment> waitlistApts = ar.getFromWaitlist(did, pid, start, end);
+        
+        for (Appointment a : waitlistApts) {
+            // try to insert them into appointments table
+            boolean result;
+            try {
+                result = ar.scheduleWaitlistedAppointment(a, start, end);
+            } catch (ParseException e) {
+                System.out.println("Parse exception " + e);
+                break;
+            }
+            if (result == true) {
+                // remove from waitlist
+                break;
+            }
+        }
+        
         return dr;
     }
 }

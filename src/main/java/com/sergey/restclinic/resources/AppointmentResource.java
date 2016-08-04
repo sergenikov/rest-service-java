@@ -257,6 +257,21 @@ public class AppointmentResource {
         // check if there is anything in waitlist
         List<Appointment> waitlistApts = getFromWaitlist(d.getId(), p.getId(), start, end);
         
+        for (Appointment a : waitlistApts) {
+            // try to insert them into appointments table
+            boolean result;
+            try {
+                result = scheduleWaitlistedAppointment(a, start, end);
+            } catch (ParseException e) {
+                System.out.println("Parse exception " + e);
+                break;
+            }
+            if (result == true) {
+                // remove from waitlist
+                break;
+            }
+        }
+        
         if (deleteResult.getDeletedCount() == 0) {
             return Response.status(400).entity("Failed to remove.").build();
         }
@@ -519,5 +534,33 @@ public class AppointmentResource {
         }
         
         return apts;
+    }
+
+    public boolean scheduleWaitlistedAppointment(
+            Appointment a, Date start, Date end) 
+            throws ParseException {
+        DatabaseConnection db = DatabaseConnection.getInstance();
+        MongoCollection<Document> aptCollection = db.mongodb.getCollection("Appointment");
+        DateTimeParser dtp = new DateTimeParser();
+        
+//        Date startDate = dtp.parseDate(a.getStart());
+//        Date endDate = dtp.parseDate(a.getEnd());
+        
+        // check for overlapping appointments
+        List<Appointment> apts = lookupAppointment(
+                a.getDoctor(), a.getPatient(), a.getStart(), a.getEnd());
+        
+        if (apts.size() > 0) {
+            return false;
+        }
+        
+        Document newDoc = new Document();
+        newDoc.append("doc_id", a.getDoctor().getId());
+        newDoc.append("pat_id", a.getDoctor().getId());
+        newDoc.append("start", start);
+        newDoc.append("end", end);
+        
+        aptCollection.insertOne(newDoc);
+        return true;
     }
 }

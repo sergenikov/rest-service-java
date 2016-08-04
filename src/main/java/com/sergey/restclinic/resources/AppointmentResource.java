@@ -163,6 +163,8 @@ public class AppointmentResource {
         }
         
         if (apts.size() > 0) {
+            // add to waitlist
+            addToWaitlist(start, end, doctor.getId(), patient.getId());
             return Response.status(400)
                     .entity("Appointment overlap. Added to waitlist").build();
         }
@@ -447,5 +449,31 @@ public class AppointmentResource {
     public Date parseDate(String date) throws ParseException {
         DateTimeParser dtp = new DateTimeParser();
         return dtp.parseDate(date);
+    }
+    
+    /**
+     * Add appointment to waitlist
+     */
+    public Response addToWaitlist(Date start, Date end, String did, String pid) {
+        DatabaseConnection db = DatabaseConnection.getInstance();
+        MongoCollection<Document> waitlistCollection = db.mongodb.getCollection("Waitlist");
+        
+        Document waitlistEntry = new Document();
+        Document aptEntry = new Document();
+        aptEntry.append("doc_id", did);
+        aptEntry.append("pat_id", pid);
+        aptEntry.append("start", start);
+        aptEntry.append("end", end);
+        waitlistEntry.append("appointment", aptEntry);
+        
+        try {
+            waitlistCollection.insertOne(waitlistEntry);
+        } catch (MongoException e) {
+            return Response.status(500)
+                    .entity("Failed to creat appointment").build();
+        }
+        
+        return Response.status(400)
+                    .entity("Appointment overlap. Added to waitlist").build();
     }
 }

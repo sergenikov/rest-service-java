@@ -530,9 +530,17 @@ public class AppointmentResource {
             
             Patient tempPat = new Patient();
             tempPat.setId((String)apt.get("pat_id"));
+            
+            // reformat dates
+            Date aptStart = apt.getDate("start");
+            Date aptEnd = apt.getDate("end");
+            DateFormat newFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+            String newStart = newFormatter.format(aptStart);
+            String newEnd = newFormatter.format(aptEnd);
+            
             Appointment a = new Appointment(
-                    apt.getDate("start").toString(), 
-                    apt.getDate("end").toString(),
+                    newStart, 
+                    newEnd,
                     tempDoc,
                     tempPat);
             apts.add(a);
@@ -562,8 +570,8 @@ public class AppointmentResource {
         Document newDoc = new Document();
         newDoc.append("doc_id", a.getDoctor().getId());
         newDoc.append("pat_id", a.getPatient().getId());
-        newDoc.append("start", start);
-        newDoc.append("end", end);
+        newDoc.append("start", a.getStart());
+        newDoc.append("end", a.getEnd());
         
         aptCollection.insertOne(newDoc);
         return true;

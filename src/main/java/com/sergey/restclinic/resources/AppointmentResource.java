@@ -69,21 +69,6 @@ public class AppointmentResource {
             documentNotFoundError(param_pat_name);
         }
         
-//        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
-        // get date from request
-//        Date start;
-//        Date end;
-//        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-//        try {
-//            start = format.parse(param_start);
-//            end = format.parse(param_end);
-//        } catch (ParseException ex) {
-//            // TODO needs some error handling for server not to freak out
-//            Logger.getLogger(AppointmentResource.class.getName()).log(Level.SEVERE, null, ex);
-//            System.out.println("in date error");
-//            return null;
-//        }
-
         Date start;
         Date end;
         DateTimeParser dtp = new DateTimeParser();
@@ -161,23 +146,6 @@ public class AppointmentResource {
                     .build();
         }
         
-//        // get date from request
-//        // and do overlap lookup and check here
-//        Date start = null;
-//        Date end = null;
-//        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-//        try {
-//            start = format.parse(apt.getStart());
-//            end = format.parse(apt.getEnd());
-//            apts = lookupAppointment(doctor, patient, apt.getStart(), apt.getEnd());
-//        } catch (ParseException ex) {
-//            // TODO needs some error handling for server not to freak out
-//            Logger.getLogger(AppointmentResource.class.getName()).log(Level.SEVERE, null, ex);
-//            return Response.status(500)
-//                    .entity("Appointment creating failed. Error " + ex)
-//                    .build();
-//        }
-        
         List<Appointment> apts;
         DateTimeParser dtp = new DateTimeParser();
         Date start;
@@ -252,21 +220,6 @@ public class AppointmentResource {
         } else if (p == null) {
             documentNotFoundError(param_pat_name);
         }
-        
-//        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
-//        // get date from request
-//        Date start = null;
-//        Date end = null;
-//        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-//        try {
-//            start = format.parse(param_start);
-//            end = format.parse(param_end);
-//        } catch (ParseException ex) {
-//            // TODO needs some error handling for server not to freak out
-//            Logger.getLogger(AppointmentResource.class.getName()).log(Level.SEVERE, null, ex);
-//            System.out.println("in date error");
-//            return null;
-//        }
         
         Date start;
         Date end;

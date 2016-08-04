@@ -42,7 +42,7 @@ public class AppointmentResourceTest extends JerseyTest {
     final String TESTPAT2 = "testPat2";
     
     final String INIT_DATE_START = "2016-08-05T14:00:00Z";
-    final String INIT_DATE_END = "2016-08-05T14:30:00Z";
+    final String INIT_DATE_END   = "2016-08-05T14:30:00Z";
     
     final String datesample = "20``16-08-05T14:00:00Z";
     
@@ -63,7 +63,7 @@ public class AppointmentResourceTest extends JerseyTest {
         insertDoctors();
         insertPatients();
         createAppointment(TESTDOC1, TESTPAT1, INIT_DATE_START, INIT_DATE_END);
-        createAppointment(TESTDOC1, TESTPAT1, "2010-08-05T14:10:00Z", "2010-08-05T14:40:00Z");
+//        createAppointment(TESTDOC1, TESTPAT1, "2010-08-05T14:10:00Z", "2010-08-05T14:40:00Z");
     }
     
     @After
@@ -213,7 +213,7 @@ public class AppointmentResourceTest extends JerseyTest {
     // ------------- init
     //           -------- new
     // Start after INIT start time and end after INIT end time.
-//    @Test
+    @Test
     public void testAddAppointmentOverlapLeft() throws ParseException {
         String start = "2016-08-05T14:15:00Z";
         String end = "2016-08-05T15:00:00Z";
@@ -233,17 +233,23 @@ public class AppointmentResourceTest extends JerseyTest {
     //      ------------- init
     //         -------- new
     // Start after INIT start time and end after INIT end time.
-//    @Test
+    /*
+     * Something is wrong with this test. Before this test runs db values are
+        not created properly. For just this test. By tempering with the db
+        it looks like overlap check logic is working, but this test is not
+        running correctly. Hence disabled for now.
+     */
+    @Test
     public void testAddAppointmentOverlapAll() throws ParseException {
         AppointmentResource a = new AppointmentResource();
-        String start = "2016-08-05T14:10:00Z";
-        String end = "2016-08-05T14:20:00Z";
+        String start = "2016-08-05T14:05:00Z";
+        String end   = "2016-08-05T14:20:00Z";
         Doctor doctor = new Doctor(TESTDOC1);
         Patient patient = new Patient(TESTPAT1);
         Appointment apt = new Appointment(start, end, doctor, patient);
         
         List<Appointment> apts1 = a.lookupAppointment(doctor, patient, start, end);
-        assertEquals(0, apts1.size());
+        assertEquals(1, apts1.size());
                 
         Entity<Appointment> aptEntity = Entity.entity(apt, MediaType.APPLICATION_XML);
         target("appointment/add").request().post(aptEntity);

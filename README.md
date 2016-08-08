@@ -6,8 +6,7 @@ Returns XML output for GET commands and XML for POST commands. Currently not imp
 
 ### Lacking
 1. Updating of Appointments
-2. Removing of Appointments
-3. Updating of Doctors and Patients
+2. Updating of Doctors and Patients
 
 
 

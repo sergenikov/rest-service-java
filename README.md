@@ -8,6 +8,8 @@ Returns XML output for GET commands and XML for POST commands. Currently not imp
 1. Updating of Appointments
 2. Updating of Doctors and Patients
 
+### Docker image for App + Glassfish
+`https://hub.docker.com/r/sergenikov/glassfish/`
 
 
 ## /restclinic/webapi/doctors
